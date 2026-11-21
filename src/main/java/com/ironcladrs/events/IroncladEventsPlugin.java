@@ -62,6 +62,7 @@ public class IroncladEventsPlugin extends Plugin
     @Inject private ClanChatRelay chat;
     @Inject private DeathListener deaths;
     @Inject private ActivityCollector activity;
+    @Inject private AccountLinker linker;
     private final List<Object> subscriptions = new ArrayList<>();
     private ScheduledFuture<?> ticker;
     private volatile boolean running;
@@ -91,9 +92,10 @@ public class IroncladEventsPlugin extends Plugin
             SwingUtilities.invokeLater(() -> { if (running && panel != null) { panel.status(message, count); } });
         });
         bank.listen(cards -> SwingUtilities.invokeLater(() -> { if (running && panel != null) { panel.bank(cards); } }));
+        linker.listen(link -> SwingUtilities.invokeLater(() -> { if (running && panel != null) { panel.link(link); } }));
         SwingUtilities.invokeLater(() -> {
             if (!running) { return; }
-            panel = new IroncladPanel(config, items, actions(guard.generation()));
+            panel = new IroncladPanel(config, items, actions(guard.generation())); panel.link(linker.state());
             navigation = NavigationButton.builder().tooltip("Ironclad Events").priority(5)
                 .icon(ImageUtil.loadImageResource(getClass(), "panel_icon.png")).panel(panel).build();
             visibility();
@@ -127,6 +129,7 @@ public class IroncladEventsPlugin extends Plugin
         running = false;
         PlayerGuard.Identity old = guard.identity(); guard.deactivate();
         if (ticker != null) { ticker.cancel(false); ticker = null; }
+        linker.cancel(); linker.listen(ignored -> {});
         subscriptions.forEach(eventBus::unregister); subscriptions.clear(); work.stop();
         clientThread.invoke(() -> {
             api.cancelAll(); resetSession();
@@ -143,6 +146,8 @@ public class IroncladEventsPlugin extends Plugin
         if (!IroncladEventsConfig.GROUP.equals(event.getGroup()) || !running) { return; }
         SwingUtilities.invokeLater(() -> { if (running) { visibility(); if (panel != null) { panel.render(); } } });
         if (Arrays.asList("showPanel", "chatNotices", "desktopNotices").contains(event.getKey())) { return; }
+        // Linking only runs while Connect is on; switching it off stops a link in progress.
+        if ("connect".equals(event.getKey()) && !config.connect()) { linker.cancel(); }
         clientThread.invoke(() -> {
             if (!running) { return; }
             PlayerGuard.Identity old = guard.identity(); api.cancelAll(); guard.clear(); guard.refresh(); resetSession();
@@ -165,6 +170,8 @@ public class IroncladEventsPlugin extends Plugin
             @Override public void clanSettings(boolean enabled)
             { dispatch(generation, () -> configManager.setConfiguration(IroncladEventsConfig.GROUP, "useClanSettings", enabled)); }
             @Override public void sync() { dispatch(generation, () -> sync.manual(Instant.now())); }
+            @Override public void link() { if (running) { linker.start(); } }
+            @Override public void cancelLink() { linker.cancel(); }
             @Override public void bank(long event, long precheck, boolean automatic) { dispatch(generation, () -> bank.send(event, precheck, automatic)); }
             @Override public void dismissBank(long event, long precheck) { dispatch(generation, () -> bank.dismiss(event, precheck)); }
             @Override public void capture(Consumer<byte[]> preview)

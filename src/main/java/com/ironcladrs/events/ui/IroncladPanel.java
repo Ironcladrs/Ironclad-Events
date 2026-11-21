@@ -3,6 +3,7 @@ package com.ironcladrs.events.ui;
 import com.google.gson.*;
 import com.ironcladrs.events.IroncladEventsConfig;
 import com.ironcladrs.events.api.dto.Json;
+import com.ironcladrs.events.sync.AccountLinker;
 import com.ironcladrs.events.sync.SessionState;
 import java.awt.*;
 import java.util.*;
@@ -22,6 +23,8 @@ public final class IroncladPanel extends PluginPanel
         void capture(Consumer<byte[]> preview); void picture(long event, long precheck, String value, String note, byte[] bytes);
         void respond(long id, String response);
         default void clanSettings(boolean enabled) {}
+        default void link() {}
+        default void cancelLink() {}
     }
     private final IroncladEventsConfig config;
     private final ItemManager items;
@@ -42,6 +45,7 @@ public final class IroncladPanel extends PluginPanel
     /** Sections the member folded shut; kept across syncs so a re-render never reopens them. */
     private final Set<String> closed = new HashSet<>();
     private final Icon logo = loadLogo();
+    private AccountLinker.State link = AccountLinker.State.IDLE_STATE;
     public IroncladPanel(IroncladEventsConfig config, ItemManager items, Actions actions)
     {
         super(true); this.config = config; this.items = items; this.actions = actions;
@@ -59,6 +63,15 @@ public final class IroncladPanel extends PluginPanel
             || !this.state.sync().equals(state.sync()) || !this.state.hello().equals(state.hello());
         this.state = state; this.unsent = unsent; this.actions = actions;
         if (changed) { render(); } else if (footer != null) { footer.state(state); footer.unsent(unsent); }
+    }
+    /** Linking progress comes from the linker; a change redraws the setup view. */
+    public void link(AccountLinker.State state)
+    {
+        if (state == null || state == link) { return; }
+        boolean fresh = state.phase == AccountLinker.State.Phase.WAITING && !(link.phase == AccountLinker.State.Phase.WAITING && link.code.equals(state.code));
+        link = state; render();
+        // Open the approve page once per new code, and only ever on the clan site.
+        if (fresh && Ui.allowedLink(state.url)) { net.runelite.client.util.LinkBrowser.browse(state.url); }
     }
     public void bank(Map<String, JsonObject> cards) { bank = cards; renderBank(); }
     public void unsent(int count) { unsent = count; if (footer != null) { footer.unsent(count); } }
@@ -90,11 +103,11 @@ public final class IroncladPanel extends PluginPanel
     {
         content.removeAll(); content.add(header()); Ui.gap(content, 6);
         content.add(Ui.fit(Ui.button("Sync now", () -> this.actions.sync())));
-        if (!state.linked) { precheckViews.clear(); precheckSchemas.clear(); Ui.gap(content, 6); content.add(new SetupCard(config, state, actions)); }
+        if (!state.linked) { precheckViews.clear(); precheckSchemas.clear(); Ui.gap(content, 6); content.add(new SetupCard(config, state, link, actions)); }
         else
         {
             content.add(Ui.fit(Ui.button(showSetup ? "Hide settings and uploads" : "Settings and uploads", () -> { showSetup = !showSetup; render(); })));
-            if (showSetup) { content.add(new SetupCard(config, state, actions)); }
+            if (showSetup) { content.add(new SetupCard(config, state, link, actions)); }
             if (!state.message.isEmpty()) { content.add(Ui.muted(state.message, Ui.WIDTH)); }
             JsonArray events = state.events();
             if (events.size() == 0)

@@ -48,3 +48,12 @@ The bot's `pluginEventContract.EVENT_VIEWS` explicitly registers every `EVENT_TY
 ### Clan recommendations and loot filters
 
 `/hello` and `/sync` include `clanPreset: {version:1,name,revision,filters:{minimumWallValue,ignoredLootItems,ignoredLootSources},recommended:{...}}`. Revision hashes cover the allow-listed data, so a staff edit changes the sync ETag. The existing audited Leadership settings registry owns these values; neither arbitrary config keys nor credentials are accepted. Recommended booleans are display-only. All feature switches and normal upload consent stay independent. The local `useClanSettings` choice follows filters only; disabling it restores preserved personal values. New client keys: `useClanSettings` (false), `minimumWallValue` (0), `ignoredLootItems` (empty), `ignoredLootSources` (empty). All original keys are retained.
+
+## Account linking (no key yet)
+
+Linking runs only while Connect is on. It uses the web API, not the ingest path, because the plugin has no key yet. Both calls are unauthenticated JSON POSTs to `https://ironcladrs.com/api/plugin-link`, with redirects off.
+
+- `POST /start` → `201 {code, secret, url, expiresIn, pollEvery}`. `code` looks like `ABCD-2345`; `url` is always `https://ironcladrs.com/plugin?code=…` and the panel refuses any other origin. Rate-limited per IP.
+- `POST /poll {code, secret}` → `{status:"pending"}`, `{status:"approved", key}` exactly once, or `{status:"expired"}` (also the answer for a wrong secret). Codes last ten minutes.
+
+The member approves the code on `/plugin` while signed in; the plugin then writes the key into the `apiKey` setting, which reconnects through the normal `/hello`. A key obtained this way still only works for an RSN linked to the approving member.

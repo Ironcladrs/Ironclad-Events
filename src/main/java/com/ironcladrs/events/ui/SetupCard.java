@@ -1,6 +1,7 @@
 package com.ironcladrs.events.ui;
 
 import com.ironcladrs.events.IroncladEventsConfig;
+import com.ironcladrs.events.sync.AccountLinker;
 import com.ironcladrs.events.sync.SessionState;
 import java.awt.*;
 import javax.swing.*;
@@ -13,7 +14,7 @@ public final class SetupCard extends JPanel
 {
     private final SessionState state;
     private JPanel list;
-    public SetupCard(IroncladEventsConfig config, SessionState state, IroncladPanel.Actions actions)
+    public SetupCard(IroncladEventsConfig config, SessionState state, AccountLinker.State link, IroncladPanel.Actions actions)
     {
         this.state = state;
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS)); setOpaque(false); setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -23,14 +24,7 @@ public final class SetupCard extends JPanel
         if (!state.message.isEmpty()) { connect.add(Ui.muted(state.message, Ui.CARD_WIDTH)); }
         list = connect;
         row("Connect to ironcladrs.com", config.connect(), null, null); row("Plugin key entered", !config.apiKey().trim().isEmpty(), null, null); row("This account linked", state.linked, null, null);
-        if (!state.linked)
-        {
-            Ui.gap(connect, 4);
-            connect.add(Ui.text("1. Get your key from the site.", Ui.CARD_WIDTH));
-            connect.add(Ui.text("2. Paste it in this plugin's settings and turn on Connect.", Ui.CARD_WIDTH));
-            connect.add(Ui.text("3. Press Sync now.", Ui.CARD_WIDTH));
-        }
-        Ui.gap(connect, 4); Ui.link(connect, "Get my key", "https://ironcladrs.com/settings#plugin");
+        Ui.gap(connect, 8); connect.add(new LinkCard(config, link, state.linked, actions)); Ui.gap(connect, 4);
         connect.add(Ui.fit(Ui.button("Where are the settings?", () -> JOptionPane.showMessageDialog(this,
             "Open RuneLite's Configuration panel, search for Ironclad Events, then click its settings cog.", "Ironclad Events settings", JOptionPane.INFORMATION_MESSAGE))));
 
