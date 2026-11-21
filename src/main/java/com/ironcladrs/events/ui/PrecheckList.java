@@ -17,13 +17,14 @@ public final class PrecheckList extends JPanel
         {
             if (++count > 100) { break; } if (!value.isJsonObject()) { continue; }
             JsonObject precheck = value.getAsJsonObject(); long id = Json.number(precheck, "id", -1);
-            add(Ui.text(Json.text(precheck, "label"))); add(Ui.text(Json.text(precheck, "instructions")));
+            if (count > 1) { add(Box.createVerticalStrut(6)); }
+            add(Ui.bold(Json.text(precheck, "label"), Ui.WIDTH)); add(Ui.muted(Json.text(precheck, "instructions"), Ui.WIDTH));
             String kind = Json.text(precheck, "kind");
             if (kind.equals("bank")) { add(Ui.text(bankAvailable ? "Open your bank to review the asked counts." : "Plugin bank checks are not available yet. Use the site.")); }
             else if (kind.equals("picture"))
             {
                 JPanel preview = Ui.column(); add(preview);
-                JButton capture = Ui.button("Capture", () -> actions.capture(bytes -> {
+                JButton capture = Ui.button("Take screenshot", () -> actions.capture(bytes -> {
                     preview.removeAll();
                     if (bytes == null) { preview.add(Ui.text("Capture unavailable. Check your connection and try again.")); }
                     else
@@ -33,14 +34,14 @@ public final class PrecheckList extends JPanel
                         number.setMaximumSize(new Dimension(190, 26)); note.setMaximumSize(new Dimension(190, 26));
                         preview.add(Ui.text("Number (optional)")); preview.add(number); preview.add(Ui.text("Note (optional)")); preview.add(note);
                         preview.add(Ui.text("Includes your whole game window and chat. Only you and reviewing staff can see it."));
-                        preview.add(Ui.button("Send picture", () -> {
+                        preview.add(Ui.fit(Ui.button("Send picture", () -> {
                             actions.picture(eventId, id, number.getText(), note.getText(), bytes);
-                            preview.removeAll(); preview.add(Ui.text("Upload requested; see the status below.")); preview.revalidate(); preview.repaint();
-                        }));
-                        preview.add(Ui.button("Discard", () -> { preview.removeAll(); preview.revalidate(); preview.repaint(); }));
+                            preview.removeAll(); preview.add(Ui.text("Sending. The result shows at the bottom of this panel.")); preview.revalidate(); preview.repaint();
+                        })));
+                        preview.add(Ui.fit(Ui.button("Discard", () -> { preview.removeAll(); preview.revalidate(); preview.repaint(); })));
                     }
                     preview.revalidate(); preview.repaint();
-                })); capture.setEnabled(picturesAvailable); add(capture);
+                })); capture.setEnabled(picturesAvailable); add(Ui.fit(capture));
                 if (!picturesAvailable) { add(Ui.text("Plugin picture uploads are not available yet. Use the site.")); }
             }
             else if (kind.equals("collection")) { add(Ui.text("Account sync can provide collection evidence.")); }

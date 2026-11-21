@@ -11,26 +11,27 @@ public final class ClanSettingsCard extends JPanel
 {
     public ClanSettingsCard(IroncladEventsConfig config, SessionState state, IroncladPanel.Actions actions)
     {
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS)); setOpaque(false);
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS)); setAlignmentX(LEFT_ALIGNMENT);
+        setBackground(net.runelite.client.ui.ColorScheme.DARKER_GRAY_COLOR); setBorder(BorderFactory.createEmptyBorder(0, 8, 8, 8));
         JsonObject preset = Json.object(state.sync(), "clanPreset");
         if (preset.size() == 0) { preset = Json.object(state.hello(), "clanPreset"); }
         final JsonObject snapshot = preset.deepCopy();
         Ui.heading(this, "Clan settings");
         if (Json.number(preset, "version", 0) != 1)
         {
-            add(Ui.text("Connect to preview the clan's current defaults. Personal filters are in use."));
-            if (config.useClanSettings()) { add(Ui.button("Use personal settings", () -> actions.clanSettings(false))); }
+            add(Ui.text("Connect to preview the clan's current defaults. Personal filters are in use.", Ui.CARD_WIDTH));
+            if (config.useClanSettings()) { add(Ui.fit(Ui.button("Use personal settings", () -> actions.clanSettings(false)))); }
             return;
         }
-        add(Ui.text(config.useClanSettings() ? "Following clan loot filters · " + Json.text(preset, "revision") : "Using personal loot filters"));
-        add(Ui.button("Preview clan settings", () -> show(snapshot)));
-        add(Ui.button(config.useClanSettings() ? "Use personal settings" : "Use clan settings", () -> {
+        add(Ui.text(config.useClanSettings() ? "Following clan loot filters · " + Json.text(preset, "revision") : "Using personal loot filters", Ui.CARD_WIDTH));
+        add(Ui.fit(Ui.button("Preview clan settings", () -> show(snapshot))));
+        add(Ui.fit(Ui.button(config.useClanSettings() ? "Use personal settings" : "Use clan settings", () -> {
             if (config.useClanSettings()) { actions.clanSettings(false); return; }
             JTextArea text = preview(snapshot);
             if (JOptionPane.showConfirmDialog(this, new JScrollPane(text), "Use clan settings?", JOptionPane.OK_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE) == JOptionPane.OK_OPTION)
             { actions.clanSettings(true); }
-        }));
-        add(Ui.text("Clan changes update filters while this is on. Upload switches remain yours; enable them in RuneLite settings."));
+        })));
+        add(Ui.muted("Clan changes update filters while this is on. Upload switches remain yours; enable them in RuneLite settings.", Ui.CARD_WIDTH));
     }
     private void show(JsonObject preset)
     { JOptionPane.showMessageDialog(this, new JScrollPane(preview(preset)), "Clan settings preview", JOptionPane.INFORMATION_MESSAGE); }

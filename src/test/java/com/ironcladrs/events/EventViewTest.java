@@ -38,12 +38,20 @@ public class EventViewTest
     @Test public void fallbackRendersAWebsiteHandoffWithoutNeedingEngineComponents() throws Exception
     {
         javax.swing.SwingUtilities.invokeAndWait(() -> {
-            EventCard card = new EventCard(event(Json.obj("version", 1, "mode", "generic")), new JsonArray(), null, null, null, false);
+            EventCard card = new EventCard(event(Json.obj("version", 1, "mode", "generic")), new JsonArray(), null, null, null, false, new java.util.HashSet<>());
             boolean open = false;
-            for (java.awt.Component component : card.getComponents())
+            java.util.Deque<java.awt.Component> walk = new java.util.ArrayDeque<>(java.util.Collections.singletonList(card));
+            while (!walk.isEmpty())
             {
-                if (component instanceof javax.swing.JButton) { assertEquals("Open event", ((javax.swing.JButton) component).getText()); open = true; }
-                if (component instanceof javax.swing.JLabel) { assertFalse(((javax.swing.JLabel) component).getText().equals("Tasks")); }
+                java.awt.Component component = walk.pop();
+                if (component instanceof javax.swing.AbstractButton)
+                {
+                    String text = ((javax.swing.AbstractButton) component).getText();
+                    assertFalse("No task section in the hand-off view", text.contains("Tasks"));
+                    if (text.equals("Open event on site")) { open = true; }
+                }
+                if (component instanceof javax.swing.JLabel) { assertFalse(((javax.swing.JLabel) component).getText().contains("Tasks")); }
+                if (component instanceof java.awt.Container) { walk.addAll(java.util.Arrays.asList(((java.awt.Container) component).getComponents())); }
             }
             assertTrue(open);
             assertTrue(EventView.message(event(Json.obj("version", 99, "mode", "generic"))).contains("paused"));

@@ -1,6 +1,7 @@
 package com.ironcladrs.events.ui;
 
 import com.ironcladrs.events.sync.SessionState;
+import java.awt.Component;
 import java.time.*;
 import javax.swing.*;
 
@@ -12,11 +13,17 @@ public final class StatusFooter extends JPanel
     private int unsent;
     public StatusFooter(SessionState state, int unsent, Runnable sync)
     {
-        this.state = state; this.unsent = unsent; setLayout(new BoxLayout(this, BoxLayout.Y_AXIS)); setOpaque(false);
-        label = Ui.text(""); add(label); update(); add(Ui.button("Sync now", sync)); Ui.link(this, "What is sent", "https://ironcladrs.com/privacy#plugin");
+        this.state = state; this.unsent = unsent; setLayout(new BoxLayout(this, BoxLayout.Y_AXIS)); setOpaque(false); setAlignmentX(Component.LEFT_ALIGNMENT);
+        setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
+        label = Ui.muted("", Ui.WIDTH); add(label); update();
+        add(Ui.fit(Ui.button("Sync now", sync)));
+        Ui.link(this, "What is sent", "https://ironcladrs.com/privacy#plugin");
     }
     public void state(SessionState state) { this.state = state; update(); }
     public void unsent(int count) { unsent = count; update(); }
     public void update()
-    { label.setText("<html>" + (state.syncedAt == null ? "Not synced" : "Synced " + Math.max(0, Duration.between(state.syncedAt, Instant.now()).getSeconds()) + " s ago") + (unsent > 0 ? "<br>" + unsent + " unsent" : "") + "</html>"); }
+    {
+        String synced = state.syncedAt == null ? "Not synced yet" : "Synced " + Ui.ago(state.syncedAt, Instant.now());
+        label.setText("<html>" + synced + (unsent > 0 ? "<br>" + unsent + " waiting to send" : "") + "</html>");
+    }
 }
