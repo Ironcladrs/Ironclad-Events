@@ -4,9 +4,15 @@ import com.google.gson.*;
 import com.ironcladrs.events.IroncladEventsConfig;
 import com.ironcladrs.events.api.dto.Json;
 import com.ironcladrs.events.sync.SessionState;
+import java.util.ArrayList;
+import java.util.List;
 import javax.swing.*;
 
-/** Following clan filters never changes credentials, upload consent or personal overrides. */
+/**
+ * Clan defaults in one press: the clan's loot filters plus every upload the clan recommends, after one
+ * confirmation that names each switch and carries RuneLite's third-party warning. Only known upload keys
+ * are ever switched on, never anything else the server sends, and nothing is switched off.
+ */
 public final class ClanSettingsCard extends JPanel
 {
     public ClanSettingsCard(IroncladEventsConfig config, SessionState state, IroncladPanel.Actions actions)
@@ -16,34 +22,66 @@ public final class ClanSettingsCard extends JPanel
         JsonObject preset = Json.object(state.sync(), "clanPreset");
         if (preset.size() == 0) { preset = Json.object(state.hello(), "clanPreset"); }
         final JsonObject snapshot = preset.deepCopy();
-        Ui.heading(this, "Clan settings");
+        Ui.heading(this, "Clan defaults");
         if (Json.number(preset, "version", 0) != 1)
         {
-            add(Ui.text("Connect to preview the clan's current defaults. Personal filters are in use.", Ui.CARD_WIDTH));
+            add(Ui.text("Connect to see what the clan recommends. Your own settings are in use.", Ui.CARD_WIDTH));
             if (config.useClanSettings()) { add(Ui.fit(Ui.button("Use personal settings", () -> actions.clanSettings(false)))); }
             return;
         }
-        add(Ui.text(config.useClanSettings() ? "Following clan loot filters · " + Json.text(preset, "revision") : "Using personal loot filters", Ui.CARD_WIDTH));
-        add(Ui.fit(Ui.button("Preview clan settings", () -> show(snapshot))));
-        add(Ui.fit(Ui.button(config.useClanSettings() ? "Use personal settings" : "Use clan settings", () -> {
-            if (config.useClanSettings()) { actions.clanSettings(false); return; }
-            JTextArea text = preview(snapshot);
-            if (JOptionPane.showConfirmDialog(this, new JScrollPane(text), "Use clan settings?", JOptionPane.OK_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE) == JOptionPane.OK_OPTION)
-            { actions.clanSettings(true); }
-        })));
-        add(Ui.muted("Clan changes update filters while this is on. Upload switches remain yours; enable them in RuneLite settings.", Ui.CARD_WIDTH));
+        List<Integer> missing = missing(config, snapshot);
+        if (config.useClanSettings() && missing.isEmpty())
+        {
+            JLabel on = Ui.text("On: clan loot filters and every upload the clan recommends.", Ui.CARD_WIDTH); on.setForeground(Ui.GOOD); add(on);
+        }
+        else
+        {
+            add(Ui.text("Turn on what the clan recommends in one go: " + missing.size() + " upload" + (missing.size() == 1 ? "" : "s") + " and the clan's loot filters. You confirm once.", Ui.CARD_WIDTH));
+            add(Ui.fit(Ui.button("Enable clan defaults", () -> {
+                if (JOptionPane.showOptionDialog(this, scroll(confirmText(config, snapshot)), "Enable clan defaults?", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE,
+                    null, new String[]{"Enable", "Cancel"}, "Cancel") == JOptionPane.YES_OPTION)
+                {
+                    List<String> keys = new ArrayList<>(); for (int i : missing) { keys.add(IroncladEventsConfig.UPLOAD_KEYS[i]); }
+                    actions.clanDefaults(keys);
+                }
+            })));
+        }
+        add(Ui.fit(Ui.button("See the clan's settings", () -> JOptionPane.showMessageDialog(this, scroll(preview(snapshot)), "Clan defaults", JOptionPane.INFORMATION_MESSAGE))));
+        if (config.useClanSettings()) { add(Ui.fit(Ui.button("Use personal settings", () -> actions.clanSettings(false)))); }
+        add(Ui.muted("Personal settings put your own loot filters back. Uploads stay as they are; turn any off in the plugin's settings.", Ui.CARD_WIDTH));
     }
-    private void show(JsonObject preset)
-    { JOptionPane.showMessageDialog(this, new JScrollPane(preview(preset)), "Clan settings preview", JOptionPane.INFORMATION_MESSAGE); }
-    private static JTextArea preview(JsonObject preset)
+    /** Positions in UPLOAD_KEYS the clan recommends that are still off. */
+    public static List<Integer> missing(IroncladEventsConfig config, JsonObject preset)
+    {
+        JsonObject recommended = Json.object(preset, "recommended"); List<Integer> result = new ArrayList<>();
+        for (int i = 0; i < IroncladEventsConfig.UPLOAD_KEYS.length; i++)
+        { String key = IroncladEventsConfig.UPLOAD_KEYS[i]; if (Json.flag(recommended, key) && !IroncladEventsConfig.upload(config, key)) { result.add(i); } }
+        return result;
+    }
+    public static String confirmText(IroncladEventsConfig config, JsonObject preset)
+    {
+        StringBuilder text = new StringBuilder(IroncladEventsConfig.THIRD_PARTY_WARNING).append(".\n\nThis turns on:\n");
+        for (int i : missing(config, preset)) { text.append("- ").append(IroncladEventsConfig.UPLOAD_LABELS[i]).append('\n'); }
+        text.append("- The clan's loot filters (your own are kept for later)\n\nNothing is turned off. Screenshots include your whole game window and chat.")
+            .append(" Hover each setting in RuneLite's settings to see exactly what it sends, and turn any off there.");
+        return text.toString();
+    }
+    private static String preview(JsonObject preset)
     {
         JsonObject filters = Json.object(preset, "filters"), recommended = Json.object(preset, "recommended");
-        StringBuilder text = new StringBuilder("Follow the clan's filters until you switch back. Your personal filters are preserved.\n\n");
-        text.append("Non-event Wall of Fame minimum: ").append(Json.number(filters, "minimumWallValue", 0)).append(" GP (0 = server minimum).\n");
-        text.append("Ignore drops containing only: ").append(Json.text(filters, "ignoredLootItems")).append("\nIgnore sources: ").append(Json.text(filters, "ignoredLootSources")).append("\nThese exclusions can suppress event submissions.\n\nUpload recommendations (not applied):\n");
-        for (String[] row : new String[][]{{"autoDrops","Event drops"},{"screenshots","Drop/PB screenshots"},{"bankPrechecks","Asked bank counts"},{"liveProgress","Live event progress"},{"syncAccount","Account snapshots"},{"autoPbs","Personal bests"},{"autoDeaths","Own deaths"},{"deathScreenshots","Public death screenshots"},{"sharePets","Pets"},{"shareMilestones","Levels"},{"shareClues","Clues"},{"relayClanChat","Clan chat"}})
-        { text.append(row[1]).append(": ").append(Json.flag(recommended, row[0]) ? "On" : "Off").append('\n'); }
-        text.append("\nEnable each upload yourself in RuneLite. Screenshots include chat; death pictures are published to the clan Discord. Server availability still applies.");
-        JTextArea area = new JTextArea(text.toString(), 18, 32); area.setLineWrap(true); area.setWrapStyleWord(true); area.setEditable(false); area.setCaretPosition(0); return area;
+        StringBuilder text = new StringBuilder("Clan loot filters\n");
+        text.append("Wall of Fame minimum: ").append(Json.number(filters, "minimumWallValue", 0)).append(" gp (0 = the site's minimum)\n");
+        text.append("Never send these items: ").append(orNone(Json.text(filters, "ignoredLootItems"))).append('\n');
+        text.append("Never send from these: ").append(orNone(Json.text(filters, "ignoredLootSources"))).append("\n\nRecommended uploads\n");
+        for (int i = 0; i < IroncladEventsConfig.UPLOAD_KEYS.length; i++)
+        { text.append(IroncladEventsConfig.UPLOAD_LABELS[i]).append(": ").append(Json.flag(recommended, IroncladEventsConfig.UPLOAD_KEYS[i]) ? "On" : "Off").append('\n'); }
+        text.append("\nRevision ").append(Json.text(preset, "revision")).append(". Filters can stop an event drop from filing.");
+        return text.toString();
+    }
+    private static String orNone(String value) { return value.trim().isEmpty() ? "none" : value; }
+    private static JScrollPane scroll(String text)
+    {
+        JTextArea area = new JTextArea(text, 18, 32); area.setLineWrap(true); area.setWrapStyleWord(true); area.setEditable(false); area.setCaretPosition(0);
+        return new JScrollPane(area);
     }
 }

@@ -51,8 +51,10 @@ public class Outbox
         if (now.isBefore(entry.due)) { return; }
         if (entry.attempts >= 3 && (sync.state().syncedAt == null || sync.state().syncedAt.isBefore(entry.due))) { return; }
         busy = true; long expected = generation;
-        byte[] image = "deaths".equals(entry.feature) ? (config.deathScreenshots() ? entry.image : null)
-            : config.screenshots() || "prechecks".equals(entry.feature) ? entry.image : null;
+        // Each feature has its own screenshot switch, re-read at send time; precheck pictures are always asked for.
+        boolean pictures = "deaths".equals(entry.feature) ? config.deathScreenshots() : "pbs".equals(entry.feature) ? config.pbScreenshots()
+            : "loot".equals(entry.feature) ? config.screenshots() : "prechecks".equals(entry.feature);
+        byte[] image = pictures ? entry.image : null;
         if ("/precheck".equals(entry.path) && image == null) { busy = false; entries.remove(); return; }
         api.request(guard.identity(), "POST", entry.path, entry.payload, image, null, result -> {
             if (expected != guard.generation()) { return; } busy = false;

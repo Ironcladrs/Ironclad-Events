@@ -57,3 +57,9 @@ Linking runs only while Connect is on. It uses the web API, not the ingest path,
 - `POST /poll {code, secret}` → `{status:"pending"}`, `{status:"approved", key}` exactly once, or `{status:"expired"}` (also the answer for a wrong secret). Codes last ten minutes.
 
 The member approves the code on `/plugin` while signed in; the plugin then writes the key into the `apiKey` setting, which reconnects through the normal `/hello`. A key obtained this way still only works for an RSN linked to the approving member.
+
+## Finer switches and clan defaults (2026-11-20)
+
+- `/loot` carries `wallOfFame: boolean`. `false` still files event claims but the server skips the Wall of Fame post and the big-drops banner. A drop that matches an event is only sent while Event tile drops is on; other drops only while Wall of Fame drops is on.
+- `/account` parts follow their own switches: `collectionLog`; `combatAchievements`; `quests` with `diaries`; `levels` with `accountType`. A part switched off is never sent, even if collected earlier.
+- `/hello` `switches` and `clanPreset.recommended` use the keys in `IroncladEventsConfig.UPLOAD_KEYS`. Enable clan defaults only ever switches those keys on, never anything else the server names, and never switches anything off.

@@ -81,7 +81,7 @@ public class CollectionLogReader
     private int lastTick = -1, startedTick = -1;
     public static boolean ownLog(int adventureLogFlag) { return adventureLogFlag == 0; }
     private boolean permitted()
-    { return consent.allows("account") && ownLog(client.getVarbitValue(VarbitID.COLLECTION_POH_HOST_BOOK_OPEN)); }
+    { return consent.accountPart("collectionLog") && ownLog(client.getVarbitValue(VarbitID.COLLECTION_POH_HOST_BOOK_OPEN)); }
     @Subscribe public void onScriptPostFired(ScriptPostFired event)
     {
         if (event.getScriptId() != SETUP || !permitted() || fetching) { return; }

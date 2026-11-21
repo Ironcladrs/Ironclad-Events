@@ -26,4 +26,14 @@ public class ClanSettingsCardTest
             assertFalse(config.connect()); assertFalse(config.autoDrops()); assertFalse(config.deathScreenshots());
         });
     }
+    @Test public void clanDefaultsAsksOnlyForMissingRecommendedUploadsAndShowsTheWarning() throws Exception
+    {
+        IroncladEventsConfig config = new IroncladEventsConfig() { @Override public boolean autoDrops() { return true; } };
+        JsonObject preset = Json.obj("version", 1, "revision", "r1", "recommended", Json.obj("autoDrops", true, "syncCollectionLog", true, "relayClanChat", false, "notAKey", true));
+        java.util.List<Integer> missing = ClanSettingsCard.missing(config, preset);
+        assertEquals(1, missing.size()); assertEquals("syncCollectionLog", IroncladEventsConfig.UPLOAD_KEYS[missing.get(0)]);
+        String text = ClanSettingsCard.confirmText(config, preset);
+        assertTrue(text.startsWith(IroncladEventsConfig.THIRD_PARTY_WARNING)); assertTrue(text.contains("- Collection log"));
+        assertFalse(text.contains("Event tile drops")); assertFalse(text.contains("Clan chat relay"));
+    }
 }

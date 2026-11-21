@@ -30,7 +30,7 @@ public class AccountSnapshot
     private final Map<Skill, Integer> observedLevels = new EnumMap<>(Skill.class);
     public void part(String name, JsonObject value)
     {
-        if (!consent.allows("account")) { return; }
+        if (!consent.accountPart(name)) { return; }
         if ("collectionLog".equals(name) && !Json.flag(value, "full") && pending.has(name))
         {
             JsonObject existing = Json.object(pending, name); JsonObject merged = Json.object(existing, "items");
@@ -54,6 +54,8 @@ public class AccountSnapshot
         if (client.getTickCount() < readyTick) { return; }
         if (dirty && !now.isBefore(collectAt)) { collect(); dirty = false; collectAt = now.plusSeconds(30); }
         while (!sent.isEmpty() && !now.isBefore(sent.peek().plusSeconds(3600))) { sent.remove(); }
+        // A part switched off after it was collected never leaves.
+        for (String name : new java.util.ArrayList<>(pending.keySet())) { if (!consent.accountPart(name)) { pending.remove(name); } }
         if (pending.size() == 0 || sent.size() >= 12) { return; }
         JsonObject payload = pending.deepCopy(); payload.addProperty("at", now.toString());
         if (outbox.submit("account", "/account", payload, null, result -> { if (!result.success()) { dirty = true; } }))

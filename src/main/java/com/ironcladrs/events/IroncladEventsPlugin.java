@@ -169,6 +169,15 @@ public class IroncladEventsPlugin extends Plugin
         {
             @Override public void clanSettings(boolean enabled)
             { dispatch(generation, () -> configManager.setConfiguration(IroncladEventsConfig.GROUP, "useClanSettings", enabled)); }
+            @Override public void clanDefaults(List<String> keys)
+            {
+                // Only our own upload keys, only ever switched on; the member confirmed this exact list in the panel.
+                List<String> allowed = new ArrayList<>(keys); allowed.retainAll(Arrays.asList(IroncladEventsConfig.UPLOAD_KEYS));
+                dispatch(generation, () -> {
+                    for (String key : allowed) { configManager.setConfiguration(IroncladEventsConfig.GROUP, key, true); }
+                    configManager.setConfiguration(IroncladEventsConfig.GROUP, "useClanSettings", true);
+                });
+            }
             @Override public void sync() { dispatch(generation, () -> sync.manual(Instant.now())); }
             @Override public void link() { if (running) { linker.start(); } }
             @Override public void cancelLink() { linker.cancel(); }

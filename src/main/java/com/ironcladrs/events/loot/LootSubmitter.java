@@ -26,10 +26,15 @@ public class LootSubmitter
     public void submit(JsonObject source, JsonArray items, Instant at)
     {
         LootPolicy policy = new LootPolicy(config, sync.state());
-        if (!consent.allows("loot") || policy.ignores(Json.text(source, "name"), items) || !LootMatcher.matches(sync.state().events(),
-            policy.wallMinimum(Json.number(Json.object(sync.state().hello(), "wall"), "minGp", Long.MAX_VALUE)), Json.text(source, "name"), items, at)) { return; }
+        if (!consent.allows("loot") || policy.ignores(Json.text(source, "name"), items)) { return; }
+        // Event tiles and the Wall of Fame are separate switches. A drop that matches an event only goes
+        // while Event tile drops is on, because sending it would file a claim.
+        String name = Json.text(source, "name");
+        boolean event = LootMatcher.matches(sync.state().events(), -1, name, items, at);
+        boolean wall = LootMatcher.matches(new JsonArray(), policy.wallMinimum(Json.number(Json.object(sync.state().hello(), "wall"), "minGp", Long.MAX_VALUE)), name, items, at);
+        if (event ? !config.autoDrops() : !(wall && config.wallOfFameDrops())) { return; }
         long generation = guard.generation();
-        JsonObject payload = Json.obj("occurredAt", at, "source", source, "items", items);
+        JsonObject payload = Json.obj("occurredAt", at, "source", source, "items", items, "wallOfFame", config.wallOfFameDrops());
         Consumer<byte[]> send = image -> {
             if (generation != guard.generation() || !consent.allows("loot")) { return; }
             outbox.submit("loot", "/loot", payload, image, result -> {

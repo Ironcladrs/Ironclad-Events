@@ -32,22 +32,29 @@ public final class SetupCard extends JPanel
 
         JPanel uploads = Ui.card(); Ui.gap(this, 6); add(uploads); list = uploads;
         uploads.add(Ui.bold("What this plugin sends", Ui.CARD_WIDTH));
-        uploads.add(Ui.muted("Everything starts off. Turn each one on in the plugin's settings.", Ui.CARD_WIDTH)); Ui.gap(uploads, 4);
-        row("Event drops", config.autoDrops(), "loot", "Items, source, kill count and time.");
-        row("Screenshots (whole window and chat)", config.screenshots(), null, "The whole game window, including chat.");
-        row("Asked bank counts", config.bankPrechecks(), "bankPrechecks", "Only the counts a precheck asks for, shown to you first.");
-        row("Live XP, KC and event time", config.liveProgress(), "progress", "XP, kill counts and minutes active during an event.");
-        row("Account: log, CAs, quests, levels", config.syncAccount(), "account", "Collection log, combat achievements, quests, diaries, levels and account type.");
-        row("New personal bests", config.autoPbs(), "pbs", "Time, worn gear and combat levels.");
-        row("Clan chat", config.relayClanChat(), "chat", "Sender, message text and time.");
-        row("Your deaths", config.autoDeaths(), "deaths", "An announcement only.");
-        row("Death screenshots to clan Discord", config.deathScreenshots(), null, "Published to the clan Discord.");
-        row("New pets", config.sharePets(), "pets", null);
-        row("Level milestones", config.shareMilestones(), "milestones", null);
-        row("Clue counts", config.shareClues(), "clues", null);
+        uploads.add(Ui.muted("Everything starts off. Turn each on in the plugin's settings, or use Enable clan defaults. Hover a setting there to see exactly what it sends.", Ui.CARD_WIDTH)); Ui.gap(uploads, 4);
+        for (int i = 0; i < IroncladEventsConfig.UPLOAD_KEYS.length; i++)
+        { String key = IroncladEventsConfig.UPLOAD_KEYS[i]; row(IroncladEventsConfig.UPLOAD_LABELS[i], IroncladEventsConfig.upload(config, key), feature(key), null); }
         Ui.gap(uploads, 4);
         uploads.add(Ui.muted("For new-item updates, turn on collection log notifications in the game's settings.", Ui.CARD_WIDTH));
         Ui.link(uploads, "What is sent", "https://ironcladrs.com/privacy#plugin");
+    }
+    /** The server feature each switch depends on, so the panel can say when the site has it turned off. */
+    static String feature(String key)
+    {
+        if (key.startsWith("sync")) { return "account"; }
+        switch (key)
+        {
+            case "autoDrops": case "wallOfFameDrops": case "screenshots": return "loot";
+            case "liveProgress": return "progress";
+            case "autoPbs": case "pbScreenshots": return "pbs";
+            case "relayClanChat": return "chat";
+            case "autoDeaths": case "deathScreenshots": return "deaths";
+            case "sharePets": return "pets";
+            case "shareMilestones": return "milestones";
+            case "shareClues": return "clues";
+            default: return key;
+        }
     }
     private void row(String label, boolean on, String feature, String detail)
     {

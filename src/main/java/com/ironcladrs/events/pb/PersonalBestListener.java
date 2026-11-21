@@ -66,7 +66,7 @@ public class PersonalBestListener
             if (generation == guard.generation() && consent.allows("pbs"))
             { outbox.submit("pbs", "/pb", payload, image, result -> { if (result.success() && result.status != 409 && !Json.flag(result.data, "duplicate")) { notices.pb(count.name, format(Json.number(payload, "timeMs", 0))); } }); }
         };
-        if (config.screenshots()) { screenshots.capture(send); } else { send.accept(null); }
+        if (config.pbScreenshots()) { screenshots.capture(send); } else { send.accept(null); }
     }
     public static Long parseNewBest(String text)
     {

@@ -23,6 +23,8 @@ public final class IroncladPanel extends PluginPanel
         void capture(Consumer<byte[]> preview); void picture(long event, long precheck, String value, String note, byte[] bytes);
         void respond(long id, String response);
         default void clanSettings(boolean enabled) {}
+        /** Switch on these upload keys plus the clan's loot filters; the plugin re-checks every key. */
+        default void clanDefaults(java.util.List<String> keys) {}
         default void link() {}
         default void cancelLink() {}
     }
@@ -109,6 +111,8 @@ public final class IroncladPanel extends PluginPanel
             content.add(Ui.fit(Ui.button(showSetup ? "Hide settings and uploads" : "Settings and uploads", () -> { showSetup = !showSetup; render(); })));
             if (showSetup) { content.add(new SetupCard(config, state, link, actions)); }
             if (!state.message.isEmpty()) { content.add(Ui.muted(state.message, Ui.WIDTH)); }
+            boolean sharing = false; for (String key : IroncladEventsConfig.UPLOAD_KEYS) { sharing |= IroncladEventsConfig.upload(config, key); }
+            if (!sharing && !showSetup) { Ui.gap(content, 6); content.add(new ClanSettingsCard(config, state, actions)); }
             JsonArray events = state.events();
             if (events.size() == 0)
             {

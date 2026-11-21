@@ -85,7 +85,7 @@ public class NewItemListener
     }
     @Subscribe public void onGameTick(GameTick event)
     {
-        if (!consent.allows("account")) { return; }
+        if (!consent.accountPart("collectionLog")) { return; }
         if (toIndex == null)
         {
             Set<Integer> eligible = collectionIds(); if (eligible == null) { return; }
@@ -102,7 +102,7 @@ public class NewItemListener
     @Subscribe public void onChatMessage(ChatMessage event)
     {
         if (event.getType() != ChatMessageType.GAMEMESSAGE && event.getType() != ChatMessageType.SPAM) { return; }
-        if (!consent.allows("account")) { return; }
+        if (!consent.accountPart("collectionLog")) { return; }
         String text = Text.removeTags(event.getMessage()); if (!text.startsWith(PREFIX)) { return; }
         String name = Json.norm(text.substring(PREFIX.length()));
         if (!send(name) && waiting.size() < 100) { waiting.add(name); }

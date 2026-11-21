@@ -52,10 +52,8 @@ public class SyncService
     }
     private void hello(Instant now)
     {
-        JsonObject switches = Json.obj("connect", config.connect(), "autoDrops", config.autoDrops(),
-            "screenshots", config.screenshots(), "bankPrechecks", config.bankPrechecks(), "liveProgress", config.liveProgress(),
-            "syncAccount", config.syncAccount(), "autoPbs", config.autoPbs(), "relayClanChat", config.relayClanChat(), "autoDeaths", config.autoDeaths(), "deathScreenshots", config.deathScreenshots(),
-            "sharePets", config.sharePets(), "shareMilestones", config.shareMilestones(), "shareClues", config.shareClues());
+        JsonObject switches = Json.obj("connect", config.connect());
+        for (String key : IroncladEventsConfig.UPLOAD_KEYS) { switches.addProperty(key, IroncladEventsConfig.upload(config, key)); }
         JsonObject payload = Json.obj("pluginVersion", ApiClient.VERSION, "switches", switches, "idempotencyKey", UUID.randomUUID());
         long expected = generation; busy = true;
         api.request(guard.identity(), "POST", "/hello", payload, null, null, result -> {
