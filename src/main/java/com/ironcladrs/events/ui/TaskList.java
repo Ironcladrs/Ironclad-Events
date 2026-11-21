@@ -10,7 +10,8 @@ import javax.swing.event.*;
 import net.runelite.client.game.ItemManager;
 
 /**
- * Build capped rows once per sync. Searching only toggles existing Swing rows locally.
+ * Build capped rows once per sync, grouped so each category has one heading. Searching only toggles
+ * existing Swing rows locally.
  * Each row is the item picture beside the task; clicking the name opens the task, so a long list
  * carries no stack of identical buttons. Finished tasks say "Done" as well as turning grey.
  */
@@ -24,10 +25,10 @@ public final class TaskList extends JPanel
         JTextField search = new JTextField(); search.setToolTipText("Search tasks"); search.getAccessibleContext().setAccessibleName("Search tasks");
         add(Ui.muted("Search tasks", Ui.WIDTH)); add(Ui.fit(search)); Ui.gap(this, 4);
         String category = null; int count = 0;
-        for (JsonElement value : tasks)
+        for (JsonObject task : byCategory(tasks))
         {
-            if (++count > 300) { break; } if (!value.isJsonObject()) { continue; }
-            JsonObject task = value.getAsJsonObject(); String nextCategory = Json.text(task, "category");
+            if (++count > 300) { break; }
+            String nextCategory = Json.text(task, "category");
             if (!nextCategory.equals(category))
             {
                 category = nextCategory;
@@ -51,6 +52,14 @@ public final class TaskList extends JPanel
             private void filter()
             { String query = Json.norm(search.getText()); for (int i = 0; i < rows.size(); i++) { rows.get(i).setVisible(labels.get(i).contains(query)); } revalidate(); repaint(); }
         });
+    }
+    /** One heading per category, in the order each category first appears; tasks keep their order inside it. */
+    public static List<JsonObject> byCategory(JsonArray tasks)
+    {
+        Map<String, List<JsonObject>> groups = new LinkedHashMap<>();
+        for (JsonElement value : tasks)
+        { if (value.isJsonObject()) { JsonObject task = value.getAsJsonObject(); groups.computeIfAbsent(Json.text(task, "category"), key -> new ArrayList<>()).add(task); } }
+        List<JsonObject> result = new ArrayList<>(); groups.values().forEach(result::addAll); return result;
     }
     private static JLabel icon(JsonObject task, ItemManager items)
     {
