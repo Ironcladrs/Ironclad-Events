@@ -50,17 +50,42 @@ public final class EventCard extends JPanel
             String score = Json.text(team, "scoreText"); if (!score.isEmpty()) { box.add(Ui.row("Score", score, false)); }
         }
 
-        // ── What to do now ──
-        JsonArray steps = Json.array(event, "nextSteps");
-        if (steps.size() > 0)
+        // ── What to do now: the team's strategy page ──
+        // Only the captain's plan goes here (user, 2026-11-20): their message, priority tasks with progress,
+        // and recommendations for you or the whole team. Solo events have no team plan, so no section.
+        JsonObject priority = Json.object(event, "priority"); JsonArray steps = Json.array(event, "nextSteps"), recommendations = Json.array(event, "recommendations");
+        boolean planned = !Json.text(priority, "text").isEmpty() || steps.size() > 0 || recommendations.size() > 0;
+        if (planned || team.size() > 0)
         {
-            JPanel body = Ui.section(this, key + "now", "What to do now", closed); int count = 0;
+            JPanel body = Ui.section(this, key + "now", "What to do now", closed);
+            if (!planned)
+            {
+                body.add(Ui.muted("Your captain hasn't set a plan yet. It shows here as soon as they save one on the team page.", Ui.WIDTH));
+                for (JsonElement value : Json.array(event, "links"))
+                { if (value.isJsonObject() && "My team".equals(Json.text(value.getAsJsonObject(), "label"))) { Ui.link(body, "Open team page", Json.text(value.getAsJsonObject(), "url")); } }
+            }
+            String message = Json.text(priority, "text");
+            if (!message.isEmpty()) { body.add(Ui.muted("From your captain", Ui.WIDTH)); body.add(Ui.text(message)); Ui.gap(body, 4); }
+            int count = 0;
             for (JsonElement value : steps)
             {
                 if (++count > 3) { break; } if (!value.isJsonObject()) { continue; } JsonObject row = value.getAsJsonObject();
-                body.add(Ui.text(Json.text(row, "text")));
-                String reason = Json.text(row, "reason"); if (!reason.isEmpty()) { body.add(Ui.muted(reason, Ui.WIDTH)); }
-                Ui.gap(body, 4);
+                boolean done = Json.flag(row, "done");
+                JLabel line = Ui.text((done ? "Done: " : count + ". ") + Json.text(row, "text")); if (done) { line.setForeground(Ui.MUTED); }
+                body.add(line);
+            }
+            int shown = 0;
+            for (JsonElement value : recommendations)
+            {
+                if (++shown > 50) { break; } if (!value.isJsonObject()) { continue; } JsonObject row = value.getAsJsonObject(); long recommendation = Json.number(row, "id", -1);
+                Ui.gap(body, 6); body.add(Ui.muted("Captain's ask", Ui.WIDTH)); body.add(Ui.text(Json.text(row, "text")));
+                String response = Json.text(row, "response"); if (!response.isEmpty()) { body.add(Ui.muted("Your answer: " + response.replace('_', ' '), Ui.WIDTH)); }
+                if (captainAvailable)
+                {
+                    body.add(Ui.buttons(Ui.button("On it", () -> actions.respond(recommendation, "on_it")),
+                        Ui.button("Done", () -> actions.respond(recommendation, "done")), Ui.button("Can't", () -> actions.respond(recommendation, "cant"))));
+                }
+                else { body.add(Ui.muted("Answer this on the site for now.", Ui.WIDTH)); }
             }
         }
 
@@ -78,28 +103,6 @@ public final class EventCard extends JPanel
                 if (++rank > 5) { break; } if (!value.isJsonObject()) { continue; } JsonObject row = value.getAsJsonObject();
                 boolean mine = Json.flag(row, "mine");
                 body.add(Ui.row(rank + ". " + Json.text(row, "name") + (mine ? " (you)" : ""), Json.text(row, "scoreText"), mine));
-            }
-        }
-
-        // ── Captain's plan ──
-        JsonObject priority = Json.object(event, "priority"); JsonArray recommendations = Json.array(event, "recommendations");
-        if (!Json.text(priority, "text").isEmpty() || Json.array(priority, "targets").size() > 0 || recommendations.size() > 0)
-        {
-            JPanel body = Ui.section(this, key + "captain", "Captain's plan", closed);
-            if (!Json.text(priority, "text").isEmpty()) { body.add(Ui.text(Json.text(priority, "text"))); }
-            for (JsonElement target : Json.array(priority, "targets")) { if (target.isJsonPrimitive()) { body.add(Ui.text("- " + target.getAsString())); } }
-            int count = 0;
-            for (JsonElement value : recommendations)
-            {
-                if (++count > 50) { break; } if (!value.isJsonObject()) { continue; } JsonObject row = value.getAsJsonObject(); long recommendation = Json.number(row, "id", -1);
-                Ui.gap(body, 4); body.add(Ui.text(Json.text(row, "text")));
-                String response = Json.text(row, "response"); if (!response.isEmpty()) { body.add(Ui.muted("Your answer: " + response, Ui.WIDTH)); }
-                if (captainAvailable)
-                {
-                    body.add(Ui.buttons(Ui.button("On it", () -> actions.respond(recommendation, "on_it")),
-                        Ui.button("Done", () -> actions.respond(recommendation, "done")), Ui.button("Can't", () -> actions.respond(recommendation, "cant"))));
-                }
-                else { body.add(Ui.muted("Answer this on the site for now.", Ui.WIDTH)); }
             }
         }
 
