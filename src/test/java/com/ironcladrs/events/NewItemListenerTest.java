@@ -19,7 +19,7 @@ public class NewItemListenerTest
         NewItemListener listener = new NewItemListener(); Client client = mock(Client.class);
         ItemManager items = mock(ItemManager.class); AccountSnapshot account = mock(AccountSnapshot.class); Consent consent = mock(Consent.class);
         TestSupport.inject(listener,"client",client); TestSupport.inject(listener,"items",items);
-        TestSupport.inject(listener,"account",account); TestSupport.inject(listener,"consent",consent); when(consent.allows("account")).thenReturn(true);
+        TestSupport.inject(listener,"account",account); TestSupport.inject(listener,"consent",consent); when(consent.accountPart("collectionLog")).thenReturn(true);
         EnumComposition tabs = mock(EnumComposition.class), pages = mock(EnumComposition.class), entries = mock(EnumComposition.class);
         StructComposition tab = mock(StructComposition.class), page = mock(StructComposition.class);
         when(client.getEnum(2102)).thenReturn(tabs); when(tabs.getIntVals()).thenReturn(new int[]{10}); when(client.getStructComposition(10)).thenReturn(tab);

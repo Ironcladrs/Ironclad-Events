@@ -15,7 +15,10 @@ import net.runelite.client.config.Range;
 public interface IroncladEventsConfig extends Config
 {
     String GROUP = "ironcladevents";
-    String THIRD_PARTY_WARNING = "This feature submits your IP address to a 3rd-party server not controlled or verified by RuneLite developers";
+    // RuneLite asks the warning to say what is sent (wiki: Information about the Plugin Hub).
+    String THIRD_PARTY_WARNING = "This feature submits your IP address, your RuneScape name, your account's id, your world type and which of these switches are on to ironcladrs.com, a 3rd-party server not controlled or verified by RuneLite developers."
+        + " Each switch below sends only what it describes once you turn it on (drops, screenshots, collection log, combat achievements, quests, levels and account type, personal bests, deaths, pets, clue completions and, if enabled, clan channel messages)."
+        + " See ironcladrs.com/privacy.";
 
     String KEY_HELP = "Get it on ironcladrs.com: Settings, then My plugin data, then Create key. Or press Get my key in the Ironclad side panel.";
 
@@ -162,7 +165,7 @@ public interface IroncladEventsConfig extends Config
 
     // ── 7. Clan chat ─────────────────────────────────────────────────────────
     @ConfigItem(section = chatSection, keyName = "relayClanChat", name = "Relay clan chat", position = 0,
-        description = "Copy messages typed in the Ironclad clan channel (sender, text and time) to the clan's Discord. Guest, friends, public and private chat are never sent.")
+        description = "Copy the Ironclad clan channel to the clan's Discord, as Clan Chat Webhooks does: members' messages (sender, rank, account type, text and time) and the clan's system broadcasts. Guest, friends, public and private chat are never sent.")
     default boolean relayClanChat() { return false; }
 
     // ── 8. Deaths ────────────────────────────────────────────────────────────
