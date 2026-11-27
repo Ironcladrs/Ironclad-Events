@@ -21,6 +21,15 @@ public class ActivityCollector
     @Inject private Client client;
     @Inject private Consent consent;
     @Inject private Outbox outbox;
+    @Inject private com.ironcladrs.events.IroncladEventsConfig config;
+    @Inject private com.ironcladrs.events.sync.SyncService sync;
+    private com.ironcladrs.events.filters.Filters filters() { return new com.ironcladrs.events.filters.Filters(config, sync.state()); }
+    /** The level the rules count: real, or virtual (100-126 from XP) when that setting is on. */
+    private int levelOf(Skill skill, boolean virtual)
+    { return virtual ? Math.min(126, Experience.getLevelForXp(client.getSkillExperience(skill))) : client.getRealSkillLevel(skill); }
+    /** Total level always counts real levels, as the game shows it. */
+    private int realTotal()
+    { int sum = 0; for (Skill skill : Skill.values()) { if (skill != Skill.OVERALL) { sum += client.getRealSkillLevel(skill); } } return sum; }
     private final Map<Skill, Integer> levels = new EnumMap<>(Skill.class);
     private final Map<String, JsonArray> pending = new LinkedHashMap<>();
     private final LinkedHashSet<String> seen = new LinkedHashSet<>();
@@ -38,11 +47,16 @@ public class ActivityCollector
         if (event.getType() != ChatMessageType.GAMEMESSAGE && event.getType() != ChatMessageType.SPAM) { return; }
         String text = Text.removeTags(event.getMessage());
         if (text.startsWith("You have a funny feeling like you") || text.startsWith("You feel something weird sneaking"))
-        { add("pets", "pet:" + client.getTickCount(), Json.obj("kind", "pet")); }
+        {
+            // "...would have been followed" is a pet the player already owns.
+            boolean duplicate = text.contains("would have been followed");
+            if (!duplicate || filters().petDuplicates) { add("pets", "pet:" + client.getTickCount(), Json.obj("kind", "pet")); }
+        }
         Matcher clue = CLUE.matcher(text);
         if (clue.find())
         {
             try { int count = Integer.parseInt(clue.group(1).replace(",", "")); String tier = clue.group(2).toLowerCase(Locale.ROOT);
+                if (!filters().sharesClue(tier)) { return; }
                 add("clues", "clue:" + tier + ":" + count, Json.obj("kind", "clue", "tier", tier, "count", count)); }
             catch (NumberFormatException ignored) { /* Invalid game line. */ }
         }
@@ -50,12 +64,15 @@ public class ActivityCollector
     @Subscribe public void onStatChanged(StatChanged event)
     {
         if (!consent.allows("milestones") || levels.isEmpty() || event.getSkill() == Skill.OVERALL) { return; }
-        Skill skill = event.getSkill(); int level = client.getRealSkillLevel(skill); Integer old = levels.put(skill, level);
+        com.ironcladrs.events.filters.Filters rules = filters();
+        Skill skill = event.getSkill(); int level = levelOf(skill, rules.virtualLevels); Integer old = levels.put(skill, level);
         if (old == null || level <= old) { return; }
-        if (old < 99 && level >= 99) { add("milestones", skill.name() + ":99", Json.obj("kind", "level", "skill", skill.name(), "level", 99)); }
-        int current = levels.values().stream().mapToInt(Integer::intValue).sum();
-        if (current / 100 > total / 100 && current >= 500)
-        { int milestone = current / 100 * 100; add("milestones", "total:" + milestone, Json.obj("kind", "total", "level", milestone)); }
+        // Every level crossed counts, so a multi-level jump still announces the right ones.
+        for (int l = old + 1; l <= level; l++)
+        { if (rules.announcesLevel(l)) { add("milestones", skill.name() + ":" + l, Json.obj("kind", "level", "skill", skill.name(), "level", l)); } }
+        int current = realTotal();
+        if (rules.announcesTotal(total, current))
+        { int milestone = rules.totalMilestone(current); add("milestones", "total:" + milestone, Json.obj("kind", "total", "level", milestone)); }
         total = current;
     }
     public void tick(Instant now)
@@ -63,8 +80,9 @@ public class ActivityCollector
         if (client.getTickCount() < readyTick) { return; }
         if (consent.allows("milestones") && levels.isEmpty())
         {
-            for (Skill skill : Skill.values()) { if (skill != Skill.OVERALL) { levels.put(skill, client.getRealSkillLevel(skill)); } }
-            total = levels.values().stream().mapToInt(Integer::intValue).sum();
+            boolean virtual = filters().virtualLevels;
+            for (Skill skill : Skill.values()) { if (skill != Skill.OVERALL) { levels.put(skill, levelOf(skill, virtual)); } }
+            total = realTotal();
         }
         if (now.isBefore(next)) { return; }
         for (String feature : new ArrayList<>(pending.keySet()))

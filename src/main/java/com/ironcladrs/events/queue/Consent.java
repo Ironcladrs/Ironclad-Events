@@ -16,6 +16,7 @@ public class Consent
     {
         guard.refresh();
         if (!config.connect() || guard.identity() == null || !sync.current() || !sync.state().feature(feature)) { return false; }
+        if (!new com.ironcladrs.events.filters.Filters(config, sync.state()).accountAllowed(guard.identity().rsn)) { return false; }
         switch (feature)
         {
             case "loot": return config.autoDrops() || config.wallOfFameDrops();

@@ -26,7 +26,7 @@ public class ScreenshotsTest
         org.mockito.Mockito.doAnswer(call->{deadline[0]=call.getArgument(0);return timeout;}).when(work).schedule(org.mockito.ArgumentMatchers.any(),org.mockito.ArgumentMatchers.eq(5L));
         com.ironcladrs.events.sync.SyncService sync=org.mockito.Mockito.mock(com.ironcladrs.events.sync.SyncService.class);
         org.mockito.Mockito.when(sync.state()).thenReturn(com.ironcladrs.events.sync.SessionState.empty("Test"));
-        TestSupport.inject(capture,"guard",guard);TestSupport.inject(capture,"work",work);TestSupport.inject(capture,"sync",sync);
+        TestSupport.inject(capture,"guard",guard);TestSupport.inject(capture,"work",work);TestSupport.inject(capture,"sync",sync);TestSupport.inject(capture,"config",new IroncladEventsConfig(){});
         TestSupport.inject(capture,"clientThread",TestSupport.immediateThread());TestSupport.inject(capture,"drawManager",new net.runelite.client.ui.DrawManager());
         java.util.concurrent.atomic.AtomicInteger calls=new java.util.concurrent.atomic.AtomicInteger();
         capture.capture(bytes->{assertNull(bytes);calls.incrementAndGet();});deadline[0].run();deadline[0].run();assertEquals(1,calls.get());

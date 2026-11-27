@@ -20,11 +20,21 @@ public class DeathListener
     @Inject private Consent consent;
     @Inject private Screenshots screenshots;
     @Inject private Outbox outbox;
+    @Inject private com.ironcladrs.events.sync.SyncService sync;
     private int lastTick = -1;
     @Subscribe public void onActorDeath(ActorDeath event)
     {
         if (client.getLocalPlayer() == null || event.getActor() != client.getLocalPlayer() || !consent.allows("deaths")) { return; }
         int tick = client.getTickCount(); if (tick == lastTick) { return; } lastTick = tick;
+        // Deaths in regions the member (or the clan) listed, such as safe minigames, are never announced.
+        int region = -1;
+        try
+        {
+            net.runelite.api.coords.LocalPoint here = client.getLocalPlayer().getLocalLocation();
+            if (here != null) { region = net.runelite.api.coords.WorldPoint.fromLocalInstance(client, here).getRegionID(); }
+        }
+        catch (RuntimeException ignored) { region = -1; /* Location unknown: announce as usual. */ }
+        if (region >= 0 && new com.ironcladrs.events.filters.Filters(config, sync.state()).ignoresDeathIn(region)) { return; }
         com.google.gson.JsonObject payload = Json.obj("at", Instant.now());
         if (config.deathScreenshots()) { screenshots.capture(bytes -> outbox.submit("deaths", "/death", payload, bytes, ignored -> {})); }
         else { outbox.submit("deaths", "/death", payload, null, ignored -> {}); }

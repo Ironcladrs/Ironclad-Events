@@ -25,6 +25,7 @@ public class ClanChatRelay
     @Inject private Consent consent;
     @Inject private Outbox outbox;
     @Inject private SyncService sync;
+    @Inject private com.ironcladrs.events.IroncladEventsConfig config;
     private JsonArray messages = new JsonArray();
     private Instant due = Instant.EPOCH;
     @Subscribe public void onChatMessage(ChatMessage event)
@@ -37,6 +38,7 @@ public class ClanChatRelay
         // A member's message needs its author; the "how to talk in clan chat" login line is never sent.
         String author = MessageSanitizer.sanitize(event.getName()).trim();
         if (content.isEmpty() || type == LOGIN || (type == NORMAL && author.isEmpty()) || messages.size() >= 100) { return; }
+        if (type != NORMAL && !new com.ironcladrs.events.filters.Filters(config, sync.state()).relayBroadcasts) { return; }
         messages.add(Json.obj("author", type == NORMAL ? author : "", "content", content, "systemMessageType", type,
             "accountType", accountType(event.getName()), "clanName", channel.getName(), "clanTitle", type == NORMAL ? rankTitle(author) : "",
             "timestamp", Instant.ofEpochSecond(event.getTimestamp())));

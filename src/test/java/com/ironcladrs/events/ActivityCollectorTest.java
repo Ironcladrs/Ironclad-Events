@@ -16,7 +16,7 @@ public class ActivityCollectorTest
     @Test public void ownMessagesBatchOnceAndClanMessagesAreIgnored() throws Exception
     {
         ActivityCollector collector=new ActivityCollector(); Consent consent=mock(Consent.class); Outbox outbox=mock(Outbox.class); Client client=mock(Client.class);
-        TestSupport.inject(collector,"client",client); TestSupport.inject(collector,"consent",consent); TestSupport.inject(collector,"outbox",outbox);
+        TestSupport.inject(collector,"client",client); TestSupport.inject(collector,"consent",consent); TestSupport.inject(collector,"outbox",outbox); TestSupport.inject(collector,"config",new IroncladEventsConfig(){}); com.ironcladrs.events.sync.SyncService syncState=org.mockito.Mockito.mock(com.ironcladrs.events.sync.SyncService.class); org.mockito.Mockito.when(syncState.state()).thenReturn(com.ironcladrs.events.sync.SessionState.empty("")); TestSupport.inject(collector,"sync",syncState);
         when(consent.allows("clues")).thenReturn(true); when(outbox.submit(any(),any(),any(),isNull(),any())).thenReturn(true);
         ChatMessage event=mock(ChatMessage.class); when(event.getMessage()).thenReturn("You have completed 1,234 hard Treasure Trails.");
         when(event.getType()).thenReturn(ChatMessageType.CLAN_CHAT); collector.onChatMessage(event);collector.tick(Instant.now());verifyNoInteractions(outbox);
@@ -27,7 +27,7 @@ public class ActivityCollectorTest
     @Test public void loginLevelsDoNotAnnounceButAReal99Does() throws Exception
     {
         ActivityCollector collector=new ActivityCollector(); Consent consent=mock(Consent.class); Outbox outbox=mock(Outbox.class); Client client=mock(Client.class);
-        TestSupport.inject(collector,"client",client); TestSupport.inject(collector,"consent",consent); TestSupport.inject(collector,"outbox",outbox);
+        TestSupport.inject(collector,"client",client); TestSupport.inject(collector,"consent",consent); TestSupport.inject(collector,"outbox",outbox); TestSupport.inject(collector,"config",new IroncladEventsConfig(){}); com.ironcladrs.events.sync.SyncService syncState=org.mockito.Mockito.mock(com.ironcladrs.events.sync.SyncService.class); org.mockito.Mockito.when(syncState.state()).thenReturn(com.ironcladrs.events.sync.SessionState.empty("")); TestSupport.inject(collector,"sync",syncState);
         when(consent.allows("milestones")).thenReturn(true);when(client.getRealSkillLevel(any())).thenReturn(1);when(client.getRealSkillLevel(Skill.ATTACK)).thenReturn(98);
         Instant now=Instant.now();collector.tick(now);verifyNoInteractions(outbox);
         when(client.getRealSkillLevel(Skill.ATTACK)).thenReturn(99);collector.onStatChanged(new StatChanged(Skill.ATTACK,13034431,99,99));collector.tick(now.plusSeconds(4));

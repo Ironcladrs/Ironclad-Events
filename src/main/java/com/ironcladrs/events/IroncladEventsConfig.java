@@ -29,7 +29,7 @@ public interface IroncladEventsConfig extends Config
     @ConfigSection(name = "2. Drops", description = "Which drops are sent: event tiles, the Wall of Fame, screenshots and filters.", position = 1, closedByDefault = true)
     String dropsSection = "drops";
 
-    @ConfigSection(name = "3. Clan loot filters", description = "Use the drop filters clan staff set on the website instead of your own.", position = 2, closedByDefault = true)
+    @ConfigSection(name = "3. Clan filters", description = "Use the filters clan staff set on the website instead of your own: drops, screenshots, levels, clues, deaths and clan chat.", position = 2, closedByDefault = true)
     String clanSection = "clan";
 
     @ConfigSection(name = "4. Prechecks and progress", description = "Answer bank prechecks from the panel and share live XP and kill counts during events.", position = 3, closedByDefault = true)
@@ -97,6 +97,10 @@ public interface IroncladEventsConfig extends Config
         description = "The one switch that lets this plugin talk to ironcladrs.com. Off: nothing is ever sent. On: it loads your events, team, tasks and claims into the side panel, and the uploads you pick in sections 2 to 9 can send. Each of those starts off.")
     default boolean connect() { return true; }
 
+    @ConfigItem(section = connectionSection, keyName = "onlyAccounts", name = "Only these accounts", position = 2,
+        description = "RuneScape names separated by commas. When filled in, the plugin sends nothing for any other account you log in with (for example your alts). Empty: every linked account.")
+    default String onlyAccounts() { return ""; }
+
     // ── 2. Drops ─────────────────────────────────────────────────────────────
     @ConfigItem(section = dropsSection, keyName = "autoDrops", name = "Event tile drops", position = 0,
         description = "When a drop matches a tile or target in a live event you are rostered in, file the claim for you: items, source, kill count and time. Staff still review every claim. If this is off, matching drops are not sent at all.")
@@ -123,9 +127,27 @@ public interface IroncladEventsConfig extends Config
         description = "Monster or activity names separated by commas, for example: Barrows, Tempoross. Nothing from them is sent. Careful: this can stop an event drop from filing. Ignored while Use clan loot filters is on.")
     default String ignoredLootSources() { return ""; }
 
+    @ConfigItem(section = dropsSection, keyName = "alwaysSendItems", name = "Always send these items", position = 6,
+        description = "Item names separated by commas. A drop containing any of these goes to the Wall of Fame even below the minimum value, like Dink's item allowlist. Never send lists still win.")
+    default String alwaysSendItems() { return ""; }
+
+    @Range(min = 0)
+    @ConfigItem(section = dropsSection, keyName = "screenshotMinValue", name = "Screenshot min (gp)", position = 7,
+        description = "Only add a screenshot to drops worth at least this much in total. 0: every drop that is sent gets one (while Screenshots on drops is on). Event tile drops always get one.")
+    default int screenshotMinValue() { return 0; }
+
+    @ConfigItem(section = dropsSection, keyName = "sendClueLoot", name = "Send clue casket loot", position = 8,
+        description = "Treat rewards from clue caskets as drops (Wall of Fame and event tiles). Off: casket rewards are never sent.")
+    default boolean sendClueLoot() { return true; }
+
+    @Range(min = 25, max = 100)
+    @ConfigItem(section = dropsSection, keyName = "screenshotScale", name = "Screenshot size (%)", position = 9,
+        description = "Shrink every screenshot this plugin sends (drops, personal bests, deaths) to this percentage of your game window. Smaller uploads faster.")
+    default int screenshotScale() { return 100; }
+
     // ── 3. Clan loot filters ─────────────────────────────────────────────────
-    @ConfigItem(section = clanSection, keyName = "useClanSettings", name = "Use clan loot filters", position = 0,
-        description = "Replace your Wall of Fame minimum and both Never send lists with the ones clan staff set on the website. Your own values are kept for when you turn this off. To also turn on the uploads the clan recommends, press Enable clan defaults in the side panel.")
+    @ConfigItem(section = clanSection, keyName = "useClanSettings", name = "Use clan filters", position = 0,
+        description = "Use the filters clan staff set on the website instead of your own (drop minimums and lists, screenshot rules, level and clue rules, ignored death regions, clan broadcasts). Your own values are kept for when you turn this off. To also turn on the uploads the clan recommends, press Enable clan defaults in the side panel.")
     default boolean useClanSettings() { return false; }
 
     // ── 4. Prechecks and progress ────────────────────────────────────────────
@@ -168,6 +190,10 @@ public interface IroncladEventsConfig extends Config
         description = "Copy the Ironclad clan channel to the clan's Discord, as Clan Chat Webhooks does: members' messages (sender, rank, account type, text and time) and the clan's system broadcasts. Guest, friends, public and private chat are never sent.")
     default boolean relayClanChat() { return true; }
 
+    @ConfigItem(section = chatSection, keyName = "relayBroadcasts", name = "Include clan broadcasts", position = 1,
+        description = "Also relay the clan's system broadcasts (drops, levels, pets, joins and leaves). Off: only members' typed messages.")
+    default boolean relayBroadcasts() { return true; }
+
     // ── 8. Deaths ────────────────────────────────────────────────────────────
     @ConfigItem(section = deathsSection, keyName = "autoDeaths", name = "Announce my deaths", position = 0,
         description = "Post your own deaths to the clan's Wall of Shame in Discord. No location, killer names or item losses are sent.")
@@ -177,14 +203,45 @@ public interface IroncladEventsConfig extends Config
         description = "Also post a screenshot of your game window, chat included, with each death. Anyone in the clan Discord channel can see it.")
     default boolean deathScreenshots() { return true; }
 
+    @ConfigItem(section = deathsSection, keyName = "ignoredDeathRegions", name = "Ignore deaths in regions", position = 2,
+        description = "Region IDs separated by commas (shown by RuneLite's developer tools or the wiki). Deaths there are never announced, for example safe minigames like Castle Wars (9520) or the Inferno practice area.")
+    default String ignoredDeathRegions() { return ""; }
+
     // ── 9. Pets, levels, clues ───────────────────────────────────────────────
     @ConfigItem(section = activitySection, keyName = "sharePets", name = "Announce my pets", position = 0,
         description = "When you get a pet, send the game's pet message so the clan can celebrate it in Discord.")
     default boolean sharePets() { return true; }
 
+    @ConfigItem(section = activitySection, keyName = "petDuplicates", name = "Include duplicate pets", position = 3,
+        description = "Also announce a pet you already own (the game's \"would have been followed\" message).")
+    default boolean petDuplicates() { return true; }
+
     @ConfigItem(section = activitySection, keyName = "shareMilestones", name = "Announce 99s and totals", position = 1,
         description = "Send your new 99s and total-level milestones for clan announcements. Levels you already had are never announced.")
     default boolean shareMilestones() { return true; }
+
+    @Range(min = 1, max = 126)
+    @ConfigItem(section = activitySection, keyName = "levelMinimum", name = "Minimum level", position = 4,
+        description = "Only announce skill levels at or above this. 99 (the default) announces 99s only; 70 announces every level from 70 up (see Level interval).")
+    default int levelMinimum() { return 99; }
+
+    @Range(min = 1, max = 50)
+    @ConfigItem(section = activitySection, keyName = "levelInterval", name = "Level interval", position = 5,
+        description = "Above the minimum, announce every Nth level: 1 is every level, 5 is 75, 80, 85…")
+    default int levelInterval() { return 1; }
+
+    @ConfigItem(section = activitySection, keyName = "virtualLevels", name = "Virtual levels past 99", position = 6,
+        description = "Count XP past 99 as levels 100 to 126 (virtual levels) for the rules above.")
+    default boolean virtualLevels() { return false; }
+
+    @Range(min = 25, max = 500)
+    @ConfigItem(section = activitySection, keyName = "totalLevelInterval", name = "Total level interval", position = 7,
+        description = "Announce your total level every this many levels, from 500 total up. 100 (the default) announces 1,500, 1,600…")
+    default int totalLevelInterval() { return 100; }
+
+    @ConfigItem(section = activitySection, keyName = "clueMinTier", name = "Lowest clue tier", position = 8,
+        description = "Only share clue completions of this tier and above.")
+    default ClueTier clueMinTier() { return ClueTier.BEGINNER; }
 
     @ConfigItem(section = activitySection, keyName = "shareClues", name = "Share clue completions", position = 2,
         description = "Send the tier and your completion count each time you finish a clue, for clan clue stats.")

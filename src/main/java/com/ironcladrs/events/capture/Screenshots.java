@@ -27,6 +27,7 @@ public class Screenshots
     @Inject private ClientThread clientThread;
     @Inject private PlayerGuard guard;
     @Inject private SyncService sync;
+    @Inject private com.ironcladrs.events.IroncladEventsConfig config;
     private int pending;
     private final List<Capture> captures = new ArrayList<>();
     public void capture(Consumer<byte[]> callback)
@@ -36,6 +37,7 @@ public class Screenshots
         Capture capture = new Capture(generation, callback); captures.add(capture);
         capture.timeout = work.schedule(() -> clientThread.invoke(() -> finish(capture, null)), 5);
         int limit = sync.state().limit("screenshotBytes", 1_500_000, 64_000, 1_500_000);
+        int scale = new com.ironcladrs.events.filters.Filters(config, sync.state()).screenshotScale;
         drawManager.requestNextFrameListener(frame -> {
             if (capture.done.get() || generation != guard.generation() || frame.getWidth(null) <= 0 || frame.getHeight(null) <= 0) { return; }
             // DrawManager hands listeners a stable frame; copy before retaining it for background work.
@@ -43,7 +45,7 @@ public class Screenshots
             Graphics2D graphics = copy.createGraphics(); graphics.drawImage(frame, 0, 0, null); graphics.dispose();
             work.execute(() -> {
                 byte[] result;
-                try { result = encode(copy, limit); } catch (Exception ex) { result = null; }
+                try { result = encode(copy, limit, scale); } catch (Exception ex) { result = null; }
                 final byte[] bytes = result;
                 clientThread.invoke(() -> {
                     finish(capture, bytes);
@@ -70,9 +72,11 @@ public class Screenshots
         ScheduledFuture<?> timeout;
         Capture(long generation, Consumer<byte[]> callback) { this.generation = generation; this.callback = callback; }
     }
-    public static byte[] encode(BufferedImage input, int limit) throws java.io.IOException
+    public static byte[] encode(BufferedImage input, int limit) throws java.io.IOException { return encode(input, limit, 100); }
+    /** JPEG at most `limit` bytes, shrunk to `percent` of the window first (Screenshot size). */
+    public static byte[] encode(BufferedImage input, int limit, int percent) throws java.io.IOException
     {
-        int width = Math.min(1600, input.getWidth());
+        int width = Math.max(1, Math.min(1600, input.getWidth() * Math.max(25, Math.min(100, percent)) / 100));
         int height = Math.max(1, input.getHeight() * width / input.getWidth());
         BufferedImage scaled = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         Graphics2D graphics = scaled.createGraphics(); graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);

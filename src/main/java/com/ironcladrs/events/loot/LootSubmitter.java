@@ -27,11 +27,19 @@ public class LootSubmitter
     {
         LootPolicy policy = new LootPolicy(config, sync.state());
         if (!consent.allows("loot") || policy.ignores(Json.text(source, "name"), items)) { return; }
+        com.ironcladrs.events.filters.Filters filters = new com.ironcladrs.events.filters.Filters(config, sync.state());
+        if (!filters.sendClueLoot && com.ironcladrs.events.filters.Filters.isClueLoot(Json.text(source, "name"))) { return; }
+        long total = 0; boolean always = false;
+        for (JsonElement value : items)
+        {
+            if (!value.isJsonObject()) { continue; } JsonObject item = value.getAsJsonObject();
+            total += Json.number(item, "quantity", 0) * Json.number(item, "priceEach", 0); always |= filters.alwaysSends(Json.text(item, "name"));
+        }
         // Event tiles and the Wall of Fame are separate switches. A drop that matches an event only goes
         // while Event tile drops is on, because sending it would file a claim.
         String name = Json.text(source, "name");
         boolean event = LootMatcher.matches(sync.state().events(), -1, name, items, at);
-        boolean wall = LootMatcher.matches(new JsonArray(), policy.wallMinimum(Json.number(Json.object(sync.state().hello(), "wall"), "minGp", Long.MAX_VALUE)), name, items, at);
+        boolean wall = always || LootMatcher.matches(new JsonArray(), policy.wallMinimum(Json.number(Json.object(sync.state().hello(), "wall"), "minGp", Long.MAX_VALUE)), name, items, at);
         if (event ? !config.autoDrops() : !(wall && config.wallOfFameDrops())) { return; }
         long generation = guard.generation();
         JsonObject payload = Json.obj("occurredAt", at, "source", source, "items", items, "wallOfFame", config.wallOfFameDrops());
@@ -43,6 +51,7 @@ public class LootSubmitter
                 for (JsonElement filed : Json.array(result.data, "filed")) { if (filed.isJsonObject()) { notices.filed(item, Json.text(filed.getAsJsonObject(), "label"), Json.text(filed.getAsJsonObject(), "kind") + ":" + Json.text(filed.getAsJsonObject(), "id")); } }
             });
         };
-        if (config.screenshots()) { screenshots.capture(send); } else { send.accept(null); }
+        // Event drops always carry proof; other drops only from the screenshot minimum up.
+        if (config.screenshots() && (event || total >= filters.screenshotMinValue)) { screenshots.capture(send); } else { send.accept(null); }
     }
 }
