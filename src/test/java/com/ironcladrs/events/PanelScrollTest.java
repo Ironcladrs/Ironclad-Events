@@ -26,7 +26,8 @@ public class PanelScrollTest
     private static java.util.List<JButton> syncButtons(Component component)
     {
         java.util.List<JButton> result = new ArrayList<>();
-        if (component instanceof JButton && "Sync now".equals(((JButton) component).getText())) { result.add((JButton) component); }
+        // The header's short "Sync" button says "Sync now" in its tooltip.
+        if (component instanceof JButton && ("Sync now".equals(((JButton) component).getText()) || "Sync now".equals(((JButton) component).getToolTipText()))) { result.add((JButton) component); }
         if (component instanceof Container) { for (Component child : ((Container) component).getComponents()) { result.addAll(syncButtons(child)); } }
         return result;
     }
