@@ -69,3 +69,11 @@ tasks.register('shadowJar', Jar) {
 	archiveClassifier.set('shadow')
 	archiveFileName.set("${rootProject.name}-${project.version}-all.jar")
 }
+
+// Development only: draw the side panel to a PNG from a saved sync payload
+// (./gradlew preview -PpreviewArgs="sync.json out.png"). Not used by the Plugin Hub build.
+tasks.register('preview', JavaExec) {
+	classpath = sourceSets.test.runtimeClasspath
+	mainClass = 'com.ironcladrs.events.preview.PanelPreview'
+	args((project.findProperty('previewArgs') ?: '').toString().split(' ').findAll { it })
+}

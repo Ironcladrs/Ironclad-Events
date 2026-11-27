@@ -25,16 +25,10 @@ public final class SetupCard extends JPanel
         list = connect;
         row("Connect to ironcladrs.com", config.connect(), null, null); row("Plugin key entered", !config.apiKey().trim().isEmpty(), null, null); row("This account linked", state.linked, null, null);
         Ui.gap(connect, 8); connect.add(new LinkCard(config, link, state.linked, actions)); Ui.gap(connect, 4);
-        connect.add(Ui.fit(Ui.button("Where are the settings?", () -> JOptionPane.showMessageDialog(this,
-            "Open RuneLite's Configuration panel, search for Ironclad Events, then click its settings cog.", "Ironclad Events settings", JOptionPane.INFORMATION_MESSAGE))));
 
-        Ui.gap(this, 6); add(new ClanSettingsCard(config, state, actions));
-
-        JPanel uploads = Ui.card(); Ui.gap(this, 6); add(uploads); list = uploads;
+        JPanel uploads = Ui.card(); Ui.gap(this, 6); add(uploads);
         uploads.add(Ui.bold("What this plugin sends", Ui.CARD_WIDTH));
-        uploads.add(Ui.muted("Everything starts off. Turn each on in the plugin's settings, or use Enable clan defaults. Hover a setting there to see exactly what it sends.", Ui.CARD_WIDTH)); Ui.gap(uploads, 4);
-        for (int i = 0; i < IroncladEventsConfig.UPLOAD_KEYS.length; i++)
-        { String key = IroncladEventsConfig.UPLOAD_KEYS[i]; row(IroncladEventsConfig.UPLOAD_LABELS[i], IroncladEventsConfig.upload(config, key), feature(key), null); }
+        uploads.add(Ui.muted("Every switch starts on, so drops, prechecks, progress and the rest work as soon as you link. Nothing is sent until then. Turn any of them off in the plugin's settings (RuneLite's Configuration page).", Ui.CARD_WIDTH));
         Ui.gap(uploads, 4);
         uploads.add(Ui.muted("For new-item updates, turn on collection log notifications in the game's settings.", Ui.CARD_WIDTH));
         Ui.link(uploads, "What is sent", "https://ironcladrs.com/privacy#plugin");

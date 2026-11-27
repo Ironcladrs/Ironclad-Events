@@ -49,7 +49,8 @@ public class LootPolicyTest
         assertTrue(clan.ignores("Zulrah", items("Whip"))); assertFalse(clan.ignores("Abyssal demon", items("Whip")));
         assertEquals(6000000, new LootPolicy(config, state(6000000)).minimumWallValue);
         LootPolicy personal = new LootPolicy(config(false), state(6000000)); assertFalse(personal.clan); assertEquals(2000000, personal.minimumWallValue);
-        assertFalse(config.autoDrops()); assertFalse(config.deathScreenshots()); assertFalse(config.connect());
+        // Following the clan's filters changes no upload switch: they keep their defaults.
+        assertTrue(config.autoDrops()); assertTrue(config.deathScreenshots()); assertTrue(config.connect());
     }
     @Test public void missingPresetFallsBackToPersonalSettingsWithoutNetworking()
     { LootPolicy policy = new LootPolicy(config(true), SessionState.empty("")); assertFalse(policy.clan); assertEquals(2000000, policy.minimumWallValue); }

@@ -15,9 +15,9 @@ public class ConsentTest
         TestSupport.inject(consent,"guard",guard); TestSupport.inject(consent,"sync",sync);
         when(guard.identity()).thenReturn(TestSupport.identity());when(sync.current()).thenReturn(true);
         when(sync.state()).thenReturn(new SessionState(true,"Connected",null,Json.obj("features",Json.obj("deaths",true,"loot",true)),Json.obj()));
-        TestSupport.inject(consent,"config",new IroncladEventsConfig(){@Override public boolean connect(){return true;} @Override public boolean autoDeaths(){return true;}});
+        TestSupport.inject(consent,"config",new IroncladEventsConfig(){@Override public boolean connect(){return true;} @Override public boolean autoDeaths(){return true;} @Override public boolean autoDrops(){return false;} @Override public boolean wallOfFameDrops(){return false;}});
         assertTrue(consent.allows("deaths"));assertFalse(consent.allows("loot"));
-        TestSupport.inject(consent,"config",new IroncladEventsConfig(){@Override public boolean autoDeaths(){return true;}});
+        TestSupport.inject(consent,"config",new IroncladEventsConfig(){@Override public boolean connect(){return false;} @Override public boolean autoDeaths(){return true;}});
         assertFalse(consent.allows("deaths"));
     }
 }

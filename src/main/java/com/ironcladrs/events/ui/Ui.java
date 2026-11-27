@@ -26,6 +26,9 @@ public final class Ui
     public static final Color GOOD = ColorScheme.PROGRESS_COMPLETE_COLOR;
     public static final Color BAD = ColorScheme.PROGRESS_ERROR_COLOR;
     public static final Color ACCENT = ColorScheme.BRAND_ORANGE;
+    /** The clan's gold (the helm's trim), for the one main action and the team's own row. */
+    public static final Color GOLD = new Color(230, 172, 30);
+    public static final Color CARD_EDGE = new Color(60, 60, 60);
     /**
      * Wrapped-text widths in real pixels: the sidebar column, a padded card, and beside a 36 px item picture.
      * Swing's HTML renderer scales CSS px by 1.3, so {@link #css} converts before writing the style.
@@ -104,29 +107,158 @@ public final class Ui
      * A titled section that folds open and shut. Folding only hides the body, so it never rebuilds lists;
      * the closed set lives on the panel, so a section stays as the member left it after each sync.
      */
-    public static JPanel section(JPanel parent, String key, String title, Set<String> closed)
+    public static JPanel section(JPanel parent, String key, String title, Set<String> closed) { return section(parent, key, title, null, closed); }
+    /** A titled section that folds open and shut; `count` ("2 of 16") sits on the right of the bar. */
+    public static JPanel section(JPanel parent, String key, String title, String count, Set<String> closed)
     {
-        JPanel body = column(); body.setOpaque(false);
-        JButton header = new JButton();
-        header.setFont(FontManager.getRunescapeBoldFont()); header.setForeground(Color.WHITE);
-        header.setHorizontalAlignment(SwingConstants.LEFT); header.setBorderPainted(false); header.setContentAreaFilled(false); header.setFocusPainted(true);
-        header.setBorder(BorderFactory.createEmptyBorder(4, 0, 4, 0)); header.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        JPanel body = column(); body.setOpaque(false); body.setBorder(BorderFactory.createEmptyBorder(4, 2, 2, 2));
+        JButton header = new JButton(); header.setLayout(new BorderLayout(6, 0));
+        JLabel name = new JLabel(plain(title)); name.setFont(FontManager.getRunescapeBoldFont()); name.setForeground(Color.WHITE);
+        JLabel right = new JLabel(count == null ? "" : plain(count)); right.setFont(FontManager.getRunescapeSmallFont()); right.setForeground(MUTED);
+        header.add(name, BorderLayout.CENTER); header.add(right, BorderLayout.EAST);
+        header.setContentAreaFilled(false); header.setOpaque(true); header.setBackground(ColorScheme.DARKER_GRAY_COLOR); header.setFocusPainted(false);
+        header.setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 8)); header.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        header.getAccessibleContext().setAccessibleName(plain(title));
         Runnable paint = () -> {
             boolean open = !closed.contains(key);
-            header.setText((open ? "- " : "+ ") + plain(title)); header.setToolTipText(open ? "Hide" : "Show"); body.setVisible(open);
+            name.setIcon(new Chevron(open)); header.setToolTipText(open ? "Hide" : "Show"); body.setVisible(open);
         };
         header.addActionListener(event -> {
             if (!closed.remove(key)) { closed.add(key); }
             paint.run(); parent.revalidate(); parent.repaint();
         });
+        header.addMouseListener(new MouseAdapter()
+        {
+            @Override public void mouseEntered(MouseEvent e) { header.setBackground(ColorScheme.DARK_GRAY_HOVER_COLOR); }
+            @Override public void mouseExited(MouseEvent e) { header.setBackground(ColorScheme.DARKER_GRAY_COLOR); }
+        });
         paint.run(); gap(parent, 6); parent.add(fit(header)); parent.add(body); return body;
     }
 
-    // ── Buttons and links ────────────────────────────────────────────────────
-    public static JButton button(String text, Runnable action)
+    // ── Drawn shapes (the RuneScape fonts have no symbols) ───────────────────
+    /** A small triangle: pointing down when open, right when shut. */
+    public static final class Chevron implements Icon
     {
-        JButton button = new JButton(plain(text)); button.setAlignmentX(Component.LEFT_ALIGNMENT);
-        button.setFocusPainted(false); button.addActionListener(event -> action.run()); return button;
+        private final boolean open;
+        public Chevron(boolean open) { this.open = open; }
+        @Override public int getIconWidth() { return 10; }
+        @Override public int getIconHeight() { return 10; }
+        @Override public void paintIcon(Component c, Graphics g, int x, int y)
+        {
+            Graphics2D g2 = (Graphics2D) g.create(); g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON); g2.setColor(MUTED);
+            Polygon p = open ? new Polygon(new int[]{x + 1, x + 9, x + 5}, new int[]{y + 3, y + 3, y + 8}, 3) : new Polygon(new int[]{x + 3, x + 8, x + 3}, new int[]{y + 1, y + 5, y + 9}, 3);
+            g2.fill(p); g2.dispose();
+        }
+    }
+    /** A task's state: a green tick in a filled circle when done, an empty ring when open. */
+    public static final class StateDot implements Icon
+    {
+        private final boolean done;
+        public StateDot(boolean done) { this.done = done; }
+        @Override public int getIconWidth() { return 12; }
+        @Override public int getIconHeight() { return 12; }
+        @Override public void paintIcon(Component c, Graphics g, int x, int y)
+        {
+            Graphics2D g2 = (Graphics2D) g.create(); g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            if (done)
+            {
+                g2.setColor(GOOD); g2.fillOval(x, y, 11, 11); g2.setColor(ColorScheme.DARKER_GRAY_COLOR); g2.setStroke(new BasicStroke(1.8f));
+                g2.drawPolyline(new int[]{x + 3, x + 5, x + 8}, new int[]{y + 6, y + 8, y + 3}, 3);
+            }
+            else { g2.setColor(ColorScheme.MEDIUM_GRAY_COLOR.brighter()); g2.setStroke(new BasicStroke(1.4f)); g2.drawOval(x + 1, y + 1, 9, 9); }
+            g2.dispose();
+        }
+    }
+    /** A thin bar: `fraction` of it filled in `fill`. */
+    public static JComponent bar(double fraction, Color fill)
+    {
+        double f = Double.isNaN(fraction) ? 0 : Math.max(0, Math.min(1, fraction));
+        JComponent bar = new JComponent()
+        {
+            @Override protected void paintComponent(Graphics g)
+            {
+                g.setColor(ColorScheme.DARK_GRAY_COLOR); g.fillRect(0, 0, getWidth(), getHeight());
+                g.setColor(fill); g.fillRect(0, 0, (int) Math.round(getWidth() * f), getHeight());
+            }
+        };
+        bar.setPreferredSize(new Dimension(10, 5)); bar.setMaximumSize(new Dimension(Integer.MAX_VALUE, 5)); bar.setAlignmentX(Component.LEFT_ALIGNMENT);
+        bar.setToolTipText(Math.round(f * 100) + "%");
+        return bar;
+    }
+    /** "3 of 16" / "3/16" in a score text → 3/16, or NaN. */
+    public static double fraction(String text)
+    {
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("(\\d[\\d,]*)\\s*(?:of|/)\\s*(\\d[\\d,]*)").matcher(text == null ? "" : text);
+        if (!m.find()) { return Double.NaN; }
+        double have = Double.parseDouble(m.group(1).replace(",", "")), need = Double.parseDouble(m.group(2).replace(",", ""));
+        return need <= 0 ? Double.NaN : have / need;
+    }
+    /** A small rounded tag ("Bingo", "Live") in a colour, with its word always written. */
+    public static JLabel pill(String text, Color color)
+    {
+        JLabel label = new JLabel(plain(text))
+        {
+            @Override protected void paintComponent(Graphics g)
+            {
+                Graphics2D g2 = (Graphics2D) g.create(); g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), 45)); g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 8, 8);
+                g2.setColor(color); g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 8, 8); g2.dispose(); super.paintComponent(g);
+            }
+        };
+        label.setFont(FontManager.getRunescapeSmallFont()); label.setForeground(color.brighter()); label.setBorder(BorderFactory.createEmptyBorder(1, 6, 1, 6)); return label;
+    }
+    /** Tags or small parts side by side on one line. */
+    public static JPanel line(JComponent... parts)
+    {
+        JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0)); row.setOpaque(false);
+        for (JComponent part : parts) { if (part != null) { row.add(part); } }
+        row.setBorder(BorderFactory.createEmptyBorder(0, -4, 0, 0)); return fit(row);
+    }
+    /** An on/off switch drawn in RuneLite's colours; the label beside it always says On or Off. */
+    public static final class Switch extends JComponent
+    {
+        private boolean on;
+        public Switch(boolean on, java.util.function.Consumer<Boolean> changed)
+        {
+            this.on = on; setPreferredSize(new Dimension(30, 16)); setMaximumSize(getPreferredSize()); setFocusable(true);
+            setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)); setToolTipText(on ? "On" : "Off");
+            Runnable flip = () -> { this.on = !this.on; setToolTipText(this.on ? "On" : "Off"); repaint(); changed.accept(this.on); };
+            addMouseListener(new MouseAdapter() { @Override public void mouseClicked(MouseEvent e) { flip.run(); } });
+            addKeyListener(new KeyAdapter() { @Override public void keyPressed(KeyEvent e) { if (e.getKeyCode() == KeyEvent.VK_SPACE || e.getKeyCode() == KeyEvent.VK_ENTER) { flip.run(); } } });
+            addFocusListener(new FocusAdapter() { @Override public void focusGained(FocusEvent e) { repaint(); } @Override public void focusLost(FocusEvent e) { repaint(); } });
+        }
+        @Override protected void paintComponent(Graphics g)
+        {
+            Graphics2D g2 = (Graphics2D) g.create(); g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(on ? GOOD.darker() : ColorScheme.MEDIUM_GRAY_COLOR); g2.fillRoundRect(0, 2, 28, 12, 12, 12);
+            if (isFocusOwner()) { g2.setColor(Color.WHITE); g2.drawRoundRect(0, 2, 28, 12, 12, 12); }
+            g2.setColor(on ? Color.WHITE : ColorScheme.LIGHT_GRAY_COLOR); g2.fillOval(on ? 15 : 1, 1, 14, 14); g2.dispose();
+        }
+    }
+
+    // ── Buttons and links ────────────────────────────────────────────────────
+    public static JButton button(String text, Runnable action) { return styled(new JButton(plain(text)), action, false); }
+    /** The one main action on a screen: the clan's gold, dark text. */
+    public static JButton primary(String text, Runnable action) { return styled(new JButton(plain(text)), action, true); }
+    /** Flat buttons in RuneLite's own greys, with a hover shade and a visible keyboard focus ring. */
+    private static JButton styled(JButton button, Runnable action, boolean main)
+    {
+        Color base = main ? GOLD : ColorScheme.DARKER_GRAY_COLOR.brighter(), hover = main ? GOLD.brighter() : ColorScheme.DARK_GRAY_HOVER_COLOR;
+        button.setAlignmentX(Component.LEFT_ALIGNMENT); button.setFocusPainted(false); button.setContentAreaFilled(false); button.setOpaque(true);
+        button.setBackground(base); button.setForeground(main ? new Color(25, 20, 5) : Color.WHITE); button.setFont(FontManager.getRunescapeSmallFont());
+        button.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(main ? GOLD.darker() : ColorScheme.MEDIUM_GRAY_COLOR), BorderFactory.createEmptyBorder(5, 8, 5, 8)));
+        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        button.addMouseListener(new MouseAdapter()
+        {
+            @Override public void mouseEntered(MouseEvent e) { if (button.isEnabled()) { button.setBackground(hover); } }
+            @Override public void mouseExited(MouseEvent e) { button.setBackground(base); }
+        });
+        button.addFocusListener(new FocusAdapter()
+        {
+            @Override public void focusGained(FocusEvent e) { button.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(Color.WHITE), BorderFactory.createEmptyBorder(5, 8, 5, 8))); }
+            @Override public void focusLost(FocusEvent e) { button.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(main ? GOLD.darker() : ColorScheme.MEDIUM_GRAY_COLOR), BorderFactory.createEmptyBorder(5, 8, 5, 8))); }
+        });
+        button.addActionListener(event -> action.run()); return button;
     }
     public static boolean allowedLink(String url)
     {

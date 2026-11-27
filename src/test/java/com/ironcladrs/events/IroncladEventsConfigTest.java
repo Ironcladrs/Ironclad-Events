@@ -11,11 +11,12 @@ public class IroncladEventsConfigTest
     private final IroncladEventsConfig config = new IroncladEventsConfig() {};
 
     @Test
-    public void allUploadConsentStartsOff()
+    public void everyUploadStartsOnLikeClanSocket()
     {
+        // User, 2026-11-27: "everything starts on like clan socket". Nothing is sent until the account is linked.
         assertFalse(config.useClanSettings());
-        assertFalse(config.connect());
-        for (String key : IroncladEventsConfig.UPLOAD_KEYS) { assertFalse(key, IroncladEventsConfig.upload(config, key)); }
+        assertTrue(config.connect());
+        for (String key : IroncladEventsConfig.UPLOAD_KEYS) { assertTrue(key, IroncladEventsConfig.upload(config, key)); }
         assertEquals("", config.apiKey());
     }
 

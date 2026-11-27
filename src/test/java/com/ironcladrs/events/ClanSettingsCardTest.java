@@ -23,12 +23,13 @@ public class ClanSettingsCardTest
             for (Component component : card.getComponents())
             { if (component instanceof JButton && ((JButton) component).getText().equals("Use personal settings")) { ((JButton) component).doClick(); clicked = true; } }
             assertTrue(clicked); verify(actions).clanSettings(false); verifyNoMoreInteractions(actions);
-            assertFalse(config.connect()); assertFalse(config.autoDrops()); assertFalse(config.deathScreenshots());
+            // The card changes no upload switch itself: they keep their defaults.
+            assertTrue(config.connect()); assertTrue(config.autoDrops()); assertTrue(config.deathScreenshots());
         });
     }
     @Test public void clanDefaultsAsksOnlyForMissingRecommendedUploadsAndShowsTheWarning() throws Exception
     {
-        IroncladEventsConfig config = new IroncladEventsConfig() { @Override public boolean autoDrops() { return true; } };
+        IroncladEventsConfig config = new IroncladEventsConfig() { @Override public boolean autoDrops() { return true; } @Override public boolean syncCollectionLog() { return false; } };
         JsonObject preset = Json.obj("version", 1, "revision", "r1", "recommended", Json.obj("autoDrops", true, "syncCollectionLog", true, "relayClanChat", false, "notAKey", true));
         java.util.List<Integer> missing = ClanSettingsCard.missing(config, preset);
         assertEquals(1, missing.size()); assertEquals("syncCollectionLog", IroncladEventsConfig.UPLOAD_KEYS[missing.get(0)]);

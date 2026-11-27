@@ -16,8 +16,7 @@ public final class StatusFooter extends JPanel
         this.state = state; this.unsent = unsent; setLayout(new BoxLayout(this, BoxLayout.Y_AXIS)); setOpaque(false); setAlignmentX(Component.LEFT_ALIGNMENT);
         setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
         label = Ui.muted("", Ui.WIDTH); add(label); update();
-        add(Ui.fit(Ui.button("Sync now", sync)));
-        Ui.link(this, "What is sent", "https://ironcladrs.com/privacy#plugin");
+        add(Ui.buttons(Ui.button("Sync now", sync), Ui.button("What is sent", () -> net.runelite.client.util.LinkBrowser.browse("https://ironcladrs.com/privacy#plugin"))));
     }
     public void state(SessionState state) { this.state = state; update(); }
     public void unsent(int count) { unsent = count; update(); }
