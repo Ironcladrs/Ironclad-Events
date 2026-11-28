@@ -28,6 +28,10 @@ import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.*;
 import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.game.ItemManager;
+import com.ironcladrs.events.ui.SidebarIcon;
+import java.awt.image.BufferedImage;
+import net.runelite.api.gameval.ItemID;
+import net.runelite.client.util.AsyncBufferedImage;
 import net.runelite.client.plugins.*;
 import net.runelite.client.ui.*;
 import net.runelite.client.util.ImageUtil;
@@ -96,9 +100,12 @@ public class IroncladEventsPlugin extends Plugin
         SwingUtilities.invokeLater(() -> {
             if (!running) { return; }
             panel = new IroncladPanel(config, items, actions(guard.generation())); panel.link(linker.state());
-            navigation = NavigationButton.builder().tooltip("Ironclad Events").priority(5)
-                .icon(ImageUtil.loadImageResource(getClass(), "panel_icon.png")).panel(panel).build();
+            navigation = button(ImageUtil.loadImageResource(getClass(), "panel_icon.png"));
             visibility();
+            // Obor's club as the sidebar icon (user, 2026-11-27: "i would prefer obors club"), drawn by
+            // RuneLite from the game's own item picture; the helm shows until it has loaded.
+            AsyncBufferedImage club = items.getImage(ItemID.HILLGIANT_BOSS_CLUB);
+            club.onLoaded(() -> SwingUtilities.invokeLater(() -> useIcon(SidebarIcon.fit(club, 16))));
         });
         ticker = work.repeat(() -> clientThread.invoke(() -> { if (running) { pulse(); } }));
         log.info("Ironclad Events started");
@@ -154,6 +161,16 @@ public class IroncladEventsPlugin extends Plugin
             if (old != null && !config.connect()) { api.request(old, "DELETE", "/session", null, null, null, ignored -> {}); }
             pulse();
         });
+    }
+    private NavigationButton button(BufferedImage icon)
+    { return NavigationButton.builder().tooltip("Ironclad Events").priority(5).icon(icon).panel(panel).build(); }
+    private void useIcon(BufferedImage icon)
+    {
+        if (!running || navigation == null || icon == null) { return; }
+        boolean shown = navigationVisible;
+        if (shown) { toolbar.removeNavigation(navigation); navigationVisible = false; }
+        navigation = button(icon);
+        visibility();
     }
     private void visibility()
     {
