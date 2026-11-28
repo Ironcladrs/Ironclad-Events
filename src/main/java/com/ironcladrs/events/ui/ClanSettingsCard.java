@@ -36,19 +36,35 @@ public final class ClanSettingsCard extends JPanel
         }
         else
         {
-            add(Ui.text("Turn on what the clan recommends in one go: " + missing.size() + " upload" + (missing.size() == 1 ? "" : "s") + " and the clan's loot filters. You confirm once.", Ui.CARD_WIDTH));
-            add(Ui.fit(Ui.button("Enable clan defaults", () -> {
-                if (JOptionPane.showOptionDialog(this, scroll(confirmText(config, snapshot)), "Enable clan defaults?", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE,
-                    null, new String[]{"Enable", "Cancel"}, "Cancel") == JOptionPane.YES_OPTION)
-                {
-                    List<String> keys = new ArrayList<>(); for (int i : missing) { keys.add(IroncladEventsConfig.UPLOAD_KEYS[i]); }
-                    actions.clanDefaults(keys);
-                }
-            })));
+            add(Ui.text(missing.isEmpty() ? "Use the clan's loot filters. Your uploads already match what the clan recommends. You confirm once."
+                : "Turn on what the clan recommends in one go: " + missing.size() + " upload" + (missing.size() == 1 ? "" : "s") + " and the clan's loot filters. You confirm once.", Ui.CARD_WIDTH));
+            add(Ui.fit(Ui.primary("Use clan defaults", () -> enable(this, config, snapshot, actions))));
         }
         add(Ui.fit(Ui.button("See the clan's settings", () -> JOptionPane.showMessageDialog(this, scroll(preview(snapshot)), "Clan defaults", JOptionPane.INFORMATION_MESSAGE))));
         if (config.useClanSettings()) { add(Ui.fit(Ui.button("Use personal settings", () -> actions.clanSettings(false)))); }
         add(Ui.muted("Personal settings put your own loot filters back. Uploads stay as they are; turn any off in the plugin's settings.", Ui.CARD_WIDTH));
+    }
+    /** Are the clan defaults offered but not fully on? Drives the button at the top of the panel. */
+    public static boolean offered(IroncladEventsConfig config, SessionState state)
+    {
+        JsonObject preset = preset(state);
+        return Json.number(preset, "version", 0) == 1 && (!config.useClanSettings() || !missing(config, preset).isEmpty());
+    }
+    /** The one confirmation (names each switch, carries the third-party warning), then turns them on. */
+    public static void enable(java.awt.Component parent, IroncladEventsConfig config, JsonObject preset, IroncladPanel.Actions actions)
+    {
+        List<Integer> missing = missing(config, preset);
+        if (JOptionPane.showOptionDialog(parent, scroll(confirmText(config, preset)), "Use clan defaults?", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE,
+            null, new String[]{"Use clan defaults", "Cancel"}, "Cancel") == JOptionPane.YES_OPTION)
+        {
+            List<String> keys = new ArrayList<>(); for (int i : missing) { keys.add(IroncladEventsConfig.UPLOAD_KEYS[i]); }
+            actions.clanDefaults(keys);
+        }
+    }
+    public static JsonObject preset(SessionState state)
+    {
+        JsonObject preset = Json.object(state.sync(), "clanPreset");
+        return (preset.size() == 0 ? Json.object(state.hello(), "clanPreset") : preset).deepCopy();
     }
     /** Positions in UPLOAD_KEYS the clan recommends that are still off. */
     public static List<Integer> missing(IroncladEventsConfig config, JsonObject preset)

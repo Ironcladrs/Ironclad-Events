@@ -130,7 +130,17 @@ public final class IroncladPanel extends PluginPanel
     public void showTab(String name) { tab = name; render(); }
     public void render()
     {
-        content.removeAll(); content.add(header()); Ui.gap(content, 8); content.add(tabs()); Ui.gap(content, 6);
+        content.removeAll(); content.add(header()); Ui.gap(content, 8);
+        // Clan defaults one press away at the top while they aren't fully on (user, 2026-11-27: "a more prominent button").
+        if (state.linked && ClanSettingsCard.offered(config, state))
+        {
+            JPanel offer = Ui.card(); content.add(offer);
+            JLabel why = Ui.text("Use the clan's recommended uploads and loot filters. You confirm once.", Ui.CARD_WIDTH); offer.add(why);
+            Ui.gap(offer, 4);
+            offer.add(Ui.fit(Ui.primary("Use clan defaults", () -> ClanSettingsCard.enable(this, config, ClanSettingsCard.preset(state), actions))));
+            Ui.gap(content, 8);
+        }
+        content.add(tabs()); Ui.gap(content, 6);
         if (!state.linked) { precheckViews.clear(); precheckSchemas.clear(); content.add(new SetupCard(config, state, link, actions)); }
         else if (tab.equals("me")) { renderMine(); }
         else { renderEvent(); }
