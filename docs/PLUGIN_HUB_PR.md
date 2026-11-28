@@ -1,4 +1,26 @@
-# Draft Hub submission — do not submit yet
+# Plugin Hub submission
+
+**Live on the Plugin Hub.** [runelite/plugin-hub#21480](https://github.com/runelite/plugin-hub/pull/21480) merged 2026-11-28 at commit `f25f39ab7c0787c677bceed94295b306d6f1abb2`.
+
+## Releasing an update
+
+The Hub builds the exact commit named in its entry file, so pushing here changes nothing for players until a new Hub PR lands.
+
+1. Finish the change here, pass `./gradlew build` and the manual test guide, push, and note the full commit hash.
+2. In `runelite/plugin-hub`, edit `plugins/ironclad-events` and change only `commit=` to that hash.
+3. Keep `authors=cjlund9`. This repo belongs to a GitHub organization, so the Hub only lets the accounts named there update the plugin (reviewer, 2026-11-28). Open the PR from that account; one from anyone else gets the "non-author" label and waits for a reviewer.
+4. Keep the `warning=` line, and reword it in the same PR if what the plugin sends changes.
+
+The entry file as merged:
+
+```
+repository=https://github.com/Ironcladrs/Ironclad-Events.git
+commit=f25f39ab7c0787c677bceed94295b306d6f1abb2
+warning=This plugin submits your IP address, RSN, account id and the drops, prechecks, progress and other data you choose to turn on to ironcladrs.com, a 3rd-party server not controlled or verified by RuneLite developers.
+authors=cjlund9
+```
+
+## Review notes sent with the first submission
 
 Ironclad Events is a side panel for Ironclad clan events on ironcladrs.com: team, revealed tasks, standings, priorities, prechecks and claim status. Every upload starts off with the exact third-party-server warning and goes only to https://ironcladrs.com. No event requires the plugin.
 

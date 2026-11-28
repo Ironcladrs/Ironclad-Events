@@ -2,7 +2,7 @@
 
 RuneLite side panel for your Ironclad clan events on [ironcladrs.com](https://ironcladrs.com): team, standings, captain priorities, tasks, prechecks and claim status, with optional uploads of your own progress.
 
-Development build. **Not published to Plugin Hub, deployed, or validated in game yet.** All upload switches start off. Server features also start off. Dink and ordinary picture submissions remain supported; no event requires this plugin.
+Available on the RuneLite Plugin Hub as **Ironclad Events**. All upload switches start off. Server features also start off. Dink and ordinary picture submissions remain supported; no event requires this plugin.
 
 ## Connect
 
