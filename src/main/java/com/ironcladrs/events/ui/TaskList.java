@@ -76,6 +76,14 @@ public final class TaskList extends JPanel
             JComponent wrapped = row;
             if (shortText.isEmpty() && !progress.isEmpty())
             { JPanel stack = Ui.column(); stack.setOpaque(false); stack.add(row); JLabel more = Ui.muted(progress, Ui.WIDTH - 20); more.setBorder(BorderFactory.createEmptyBorder(0, 20, 2, 0)); stack.add(more); wrapped = Ui.fit(stack); }
+            // What counts for it, in the staff's own words (2026-11-27: "show what is accepted").
+            String accepts = Json.text(task, "accepts");
+            if (!accepts.isEmpty())
+            {
+                JPanel stack = Ui.column(); stack.setOpaque(false); stack.add(wrapped);
+                JLabel counts = Ui.muted("Counts: " + accepts, Ui.WIDTH - 20); counts.setBorder(BorderFactory.createEmptyBorder(0, 20, 2, 0)); stack.add(counts);
+                wrapped = Ui.fit(stack);
+            }
             rows.add(wrapped); labels.add(Json.norm(title + " " + category + " " + Json.text(task, "category") + " " + Json.text(task, "search"))); finished.add(isDone); headingOf.add(headings.size() - 1); add(wrapped);
         }
         search.getDocument().addDocumentListener(new DocumentListener()

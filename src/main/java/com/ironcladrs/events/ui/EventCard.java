@@ -64,7 +64,10 @@ public final class EventCard extends JPanel
             {
                 if (!value.isJsonObject()) { continue; } JsonObject row = value.getAsJsonObject(); boolean risk = "risk".equals(Json.text(row, "kind"));
                 body.add(Ui.line(Ui.pill(risk ? "At risk" : "Within reach", risk ? Ui.BAD : Ui.GOOD), Ui.bold(Json.text(row, "name"), Ui.CARD_WIDTH - 80)));
-                body.add(Ui.muted(Json.text(row, "text"), Ui.WIDTH)); Ui.gap(body, 4);
+                body.add(Ui.muted(Json.text(row, "text"), Ui.WIDTH));
+                String accepts = Json.text(row, "accepts");
+                if (!accepts.isEmpty()) { body.add(Ui.muted("Counts: " + accepts, Ui.WIDTH)); }
+                Ui.gap(body, 4);
             }
         }
 

@@ -39,11 +39,11 @@ public class EventPanelsTest
     @Test public void dominationShowsCloseCallsAndRegions()
     {
         JsonObject ev = event("dom");
-        JsonArray close = new JsonArray(); close.add(Json.obj("name", "Vorkath", "kind", "reach", "text", "2 behind Red Dragons")); close.add(Json.obj("name", "Zulrah", "kind", "risk", "text", "Your lead over Blue Moons is 1"));
+        JsonArray close = new JsonArray(); close.add(Json.obj("name", "Vorkath", "kind", "reach", "text", "2 behind Red Dragons", "accepts", "Draconic visage, Vorkath's head from Vorkath")); close.add(Json.obj("name", "Zulrah", "kind", "risk", "text", "Your lead over Blue Moons is 1"));
         JsonArray areas = new JsonArray(); areas.add(Json.obj("name", "Kandarin", "status", "theirs", "text", "Held by Red Dragons")); areas.add(Json.obj("name", "Asgarnia", "status", "yours", "text", "Held by your team"));
         ev.add("closeCalls", close); ev.add("areas", areas);
         String text = shown(ev);
-        for (String expected : new String[]{"Close calls", "Within reach", "Vorkath", "2 behind Red Dragons", "At risk", "Regions", "1 of 2 yours", "Theirs", "Kandarin", "Yours"})
+        for (String expected : new String[]{"Close calls", "Within reach", "Vorkath", "2 behind Red Dragons", "Counts: Draconic visage, Vorkath's head from Vorkath", "At risk", "Regions", "1 of 2 yours", "Theirs", "Kandarin", "Yours"})
         { assertTrue(expected + " in: " + text, text.contains(expected)); }
         assertFalse(text.contains("Enemy fleet"));
     }
@@ -65,5 +65,15 @@ public class EventPanelsTest
     {
         assertEquals("Kandarin", TaskList.heading(Json.obj("group", "Kandarin", "category", "Bosses")));
         assertEquals("Bosses", TaskList.heading(Json.obj("category", "Bosses")));
+    }
+
+    @Test public void eachTaskSaysWhatCounts()
+    {
+        JsonArray tasks = new JsonArray();
+        tasks.add(Json.obj("id", "a", "label", "Fangs", "group", "Kandarin", "accepts", "Tanzanite fang, Magic fang from Zulrah", "progressText", "your team 0, leader 1"));
+        tasks.add(Json.obj("id", "b", "label", "Bones", "group", "Kandarin", "accepts", ""));
+        List<String> out = new ArrayList<>(); texts(new TaskList(tasks, null), out); String text = String.join(" | ", out);
+        assertTrue(text, text.contains("Counts: Tanzanite fang, Magic fang from Zulrah"));
+        assertEquals("no empty Counts line", 1, out.stream().filter(t -> t.startsWith("Counts:")).count());
     }
 }
