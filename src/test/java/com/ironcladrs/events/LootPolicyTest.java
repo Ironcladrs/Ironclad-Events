@@ -50,7 +50,7 @@ public class LootPolicyTest
         assertEquals(6000000, new LootPolicy(config, state(6000000)).minimumWallValue);
         LootPolicy personal = new LootPolicy(config(false), state(6000000)); assertFalse(personal.clan); assertEquals(2000000, personal.minimumWallValue);
         // Following the clan's filters changes no upload switch: they keep their defaults.
-        assertTrue(config.autoDrops()); assertTrue(config.deathScreenshots()); assertTrue(config.connect());
+        assertFalse(config.autoDrops()); assertFalse(config.deathScreenshots()); assertFalse(config.connect());
     }
     @Test public void missingPresetFallsBackToPersonalSettingsWithoutNetworking()
     { LootPolicy policy = new LootPolicy(config(true), SessionState.empty("")); assertFalse(policy.clan); assertEquals(2000000, policy.minimumWallValue); }

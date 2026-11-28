@@ -103,24 +103,24 @@ public interface IroncladEventsConfig extends Config
 
     @ConfigItem(section = connectionSection, keyName = "connect", name = "Connect to ironcladrs.com", position = 1, warning = THIRD_PARTY_WARNING,
         description = "The one switch that lets this plugin talk to ironcladrs.com. Off: nothing is ever sent. On: it loads your events, team, tasks and claims into the side panel, and the uploads you pick in sections 2 to 9 can send. Each of those starts off.")
-    default boolean connect() { return true; }
+    default boolean connect() { return false; }
 
     @ConfigItem(section = connectionSection, keyName = "onlyAccounts", name = "Only these accounts", position = 2,
         description = "RuneScape names separated by commas. When filled in, the plugin sends nothing for any other account you log in with (for example your alts). Empty: every linked account.")
     default String onlyAccounts() { return ""; }
 
     // ── 2. Drops ─────────────────────────────────────────────────────────────
-    @ConfigItem(section = dropsSection, keyName = "autoDrops", name = "Event tile drops", position = 0,
+    @ConfigItem(warning = THIRD_PARTY_WARNING, section = dropsSection, keyName = "autoDrops", name = "Event tile drops", position = 0,
         description = "When a drop matches a tile or target in a live event you are rostered in, file the claim for you: items, source, kill count and time. Staff still review every claim. If this is off, matching drops are not sent at all.")
-    default boolean autoDrops() { return true; }
+    default boolean autoDrops() { return false; }
 
-    @ConfigItem(section = dropsSection, keyName = "wallOfFameDrops", name = "Wall of Fame drops", position = 1,
+    @ConfigItem(warning = THIRD_PARTY_WARNING, section = dropsSection, keyName = "wallOfFameDrops", name = "Wall of Fame drops", position = 1,
         description = "Send other drops worth at least the Wall of Fame minimum so they are posted on the clan's Wall of Fame. Off: event drops still file, but are never posted to the wall by this plugin.")
-    default boolean wallOfFameDrops() { return true; }
+    default boolean wallOfFameDrops() { return false; }
 
-    @ConfigItem(section = dropsSection, keyName = "screenshots", name = "Screenshots on drops", position = 2,
+    @ConfigItem(warning = THIRD_PARTY_WARNING, section = dropsSection, keyName = "screenshots", name = "Screenshots on drops", position = 2,
         description = "Add a screenshot of your whole game window, chat included, to each drop sent above, as proof for staff.")
-    default boolean screenshots() { return true; }
+    default boolean screenshots() { return false; }
 
     @Range(min = 0)
     @ConfigItem(section = dropsSection, keyName = "minimumWallValue", name = "Wall of Fame min (gp)", position = 3,
@@ -162,9 +162,9 @@ public interface IroncladEventsConfig extends Config
         description = "On: a rare drop still has to be worth the Wall of Fame minimum (Dink's \"Require both\").")
     default boolean rarityAndValue() { return false; }
 
-    @ConfigItem(section = dropsSection, keyName = "sendPkLoot", name = "Send PK loot", position = 12,
+    @ConfigItem(warning = THIRD_PARTY_WARNING, section = dropsSection, keyName = "sendPkLoot", name = "Send PK loot", position = 12,
         description = "Send loot from player kills to the Wall of Fame as \"Player kill\". The other player's name is never sent.")
-    default boolean sendPkLoot() { return true; }
+    default boolean sendPkLoot() { return false; }
 
     // ── 3. Clan loot filters ─────────────────────────────────────────────────
     @ConfigItem(section = clanSection, keyName = "useClanSettings", name = "Use clan filters", position = 0,
@@ -172,57 +172,57 @@ public interface IroncladEventsConfig extends Config
     default boolean useClanSettings() { return false; }
 
     // ── 4. Prechecks and progress ────────────────────────────────────────────
-    @ConfigItem(section = eventsSection, keyName = "bankPrechecks", name = "Bank prechecks", position = 0,
+    @ConfigItem(warning = THIRD_PARTY_WARNING, section = eventsSection, keyName = "bankPrechecks", name = "Bank prechecks", position = 0,
         description = "When an event precheck asks how many of an item you own, open your bank and the side panel shows the exact counts it will send. Nothing is sent until you press Send. Only the asked items are counted, from bank, inventory and equipment.")
-    default boolean bankPrechecks() { return true; }
+    default boolean bankPrechecks() { return false; }
 
-    @ConfigItem(section = eventsSection, keyName = "liveProgress", name = "Live event progress", position = 1,
+    @ConfigItem(warning = THIRD_PARTY_WARNING, section = eventsSection, keyName = "liveProgress", name = "Live event progress", position = 1,
         description = "During events you are in, send XP and kill counts for the skills and bosses that event tracks, plus your logged-in minutes. The site shows it as waiting until Wise Old Man confirms it; scores only ever use Wise Old Man.")
-    default boolean liveProgress() { return true; }
+    default boolean liveProgress() { return false; }
 
     // ── 5. Account sync ──────────────────────────────────────────────────────
-    @ConfigItem(section = accountSection, keyName = "syncCollectionLog", name = "Collection log", position = 0,
+    @ConfigItem(warning = THIRD_PARTY_WARNING, section = accountSection, keyName = "syncCollectionLog", name = "Collection log", position = 0,
         description = "Send which collection log slots you have and how many, when you open your log and when you get a new slot. Used by Collection Log Hunt, collection prechecks and your site profile. Open your log once so it can be read.")
-    default boolean syncCollectionLog() { return true; }
+    default boolean syncCollectionLog() { return false; }
 
-    @ConfigItem(section = accountSection, keyName = "syncCombatAchievements", name = "Combat achievements", position = 1,
+    @ConfigItem(warning = THIRD_PARTY_WARNING, section = accountSection, keyName = "syncCombatAchievements", name = "Combat achievements", position = 1,
         description = "Send your combat achievement tier totals and the IDs of tasks you have completed, when they change. Used for your profile and events that ask for CA tiers.")
-    default boolean syncCombatAchievements() { return true; }
+    default boolean syncCombatAchievements() { return false; }
 
-    @ConfigItem(section = accountSection, keyName = "syncQuests", name = "Quests and diaries", position = 2,
+    @ConfigItem(warning = THIRD_PARTY_WARNING, section = accountSection, keyName = "syncQuests", name = "Quests and diaries", position = 2,
         description = "Send each quest's state (not started, started, finished) and which achievement diary tiers you have done. Used to check event requirements.")
-    default boolean syncQuests() { return true; }
+    default boolean syncQuests() { return false; }
 
-    @ConfigItem(section = accountSection, keyName = "syncLevels", name = "Levels and account type", position = 3,
+    @ConfigItem(warning = THIRD_PARTY_WARNING, section = accountSection, keyName = "syncLevels", name = "Levels and account type", position = 3,
         description = "Send your skill levels and whether you are an ironman, hardcore or group ironman. Used for your profile and event requirements.")
-    default boolean syncLevels() { return true; }
+    default boolean syncLevels() { return false; }
 
     // ── 6. Personal bests ────────────────────────────────────────────────────
-    @ConfigItem(section = pbSection, keyName = "autoPbs", name = "Submit personal bests", position = 0,
+    @ConfigItem(warning = THIRD_PARTY_WARNING, section = pbSection, keyName = "autoPbs", name = "Submit personal bests", position = 0,
         description = "When the game says you set a new personal best, send the time, team size, worn gear and combat levels to the clan PB ladder. Staff approve it before it shows.")
-    default boolean autoPbs() { return true; }
+    default boolean autoPbs() { return false; }
 
-    @ConfigItem(section = pbSection, keyName = "pbScreenshots", name = "Screenshots on PBs", position = 1,
+    @ConfigItem(warning = THIRD_PARTY_WARNING, section = pbSection, keyName = "pbScreenshots", name = "Screenshots on PBs", position = 1,
         description = "Add a screenshot of your whole game window, chat included, to each personal best sent, as proof for staff.")
-    default boolean pbScreenshots() { return true; }
+    default boolean pbScreenshots() { return false; }
 
     // ── 7. Clan chat ─────────────────────────────────────────────────────────
-    @ConfigItem(section = chatSection, keyName = "relayClanChat", name = "Relay clan chat", position = 0,
+    @ConfigItem(warning = THIRD_PARTY_WARNING, section = chatSection, keyName = "relayClanChat", name = "Relay clan chat", position = 0,
         description = "Copy the Ironclad clan channel to the clan's Discord, as Clan Chat Webhooks does: members' messages (sender, rank, account type, text and time) and the clan's system broadcasts. Guest, friends, public and private chat are never sent.")
-    default boolean relayClanChat() { return true; }
+    default boolean relayClanChat() { return false; }
 
     @ConfigItem(section = chatSection, keyName = "relayBroadcasts", name = "Include clan broadcasts", position = 1,
         description = "Also relay the clan's system broadcasts (drops, levels, pets, joins and leaves). Off: only members' typed messages.")
     default boolean relayBroadcasts() { return true; }
 
     // ── 8. Deaths ────────────────────────────────────────────────────────────
-    @ConfigItem(section = deathsSection, keyName = "autoDeaths", name = "Announce my deaths", position = 0,
+    @ConfigItem(warning = THIRD_PARTY_WARNING, section = deathsSection, keyName = "autoDeaths", name = "Announce my deaths", position = 0,
         description = "Post your own deaths to the clan's Wall of Shame in Discord. No location, killer names or item losses are sent.")
-    default boolean autoDeaths() { return true; }
+    default boolean autoDeaths() { return false; }
 
-    @ConfigItem(section = deathsSection, keyName = "deathScreenshots", name = "Screenshots on deaths", position = 1,
+    @ConfigItem(warning = THIRD_PARTY_WARNING, section = deathsSection, keyName = "deathScreenshots", name = "Screenshots on deaths", position = 1,
         description = "Also post a screenshot of your game window, chat included, with each death. Anyone in the clan Discord channel can see it.")
-    default boolean deathScreenshots() { return true; }
+    default boolean deathScreenshots() { return false; }
 
     @ConfigItem(section = deathsSection, keyName = "ignoredDeathRegions", name = "Ignore deaths in regions", position = 2,
         description = "Region IDs separated by commas (shown by RuneLite's developer tools or the wiki). Deaths there are never announced, for example safe minigames like Castle Wars (9520) or the Inferno practice area.")
@@ -237,17 +237,17 @@ public interface IroncladEventsConfig extends Config
     default Set<SafeDeathException> safeDeathExceptions() { return EnumSet.of(SafeDeathException.INFERNO, SafeDeathException.FIGHT_CAVE, SafeDeathException.JAD_CHALLENGES); }
 
     // ── 9. Pets, levels, clues ───────────────────────────────────────────────
-    @ConfigItem(section = activitySection, keyName = "sharePets", name = "Announce my pets", position = 0,
+    @ConfigItem(warning = THIRD_PARTY_WARNING, section = activitySection, keyName = "sharePets", name = "Announce my pets", position = 0,
         description = "When you get a pet, send the game's pet message so the clan can celebrate it in Discord.")
-    default boolean sharePets() { return true; }
+    default boolean sharePets() { return false; }
 
     @ConfigItem(section = activitySection, keyName = "petDuplicates", name = "Include duplicate pets", position = 3,
         description = "Also announce a pet you already own (the game's \"would have been followed\" message).")
     default boolean petDuplicates() { return true; }
 
-    @ConfigItem(section = activitySection, keyName = "shareMilestones", name = "Announce 99s and totals", position = 1,
+    @ConfigItem(warning = THIRD_PARTY_WARNING, section = activitySection, keyName = "shareMilestones", name = "Announce 99s and totals", position = 1,
         description = "Send your new 99s and total-level milestones for clan announcements. Levels you already had are never announced.")
-    default boolean shareMilestones() { return true; }
+    default boolean shareMilestones() { return false; }
 
     @Range(min = 1, max = 126)
     @ConfigItem(section = activitySection, keyName = "levelMinimum", name = "Minimum level", position = 4,
@@ -272,25 +272,25 @@ public interface IroncladEventsConfig extends Config
         description = "Only share clue completions of this tier and above.")
     default ClueTier clueMinTier() { return ClueTier.BEGINNER; }
 
-    @ConfigItem(section = activitySection, keyName = "shareCombatTasks", name = "Announce combat tasks", position = 9,
+    @ConfigItem(warning = THIRD_PARTY_WARNING, section = activitySection, keyName = "shareCombatTasks", name = "Announce combat tasks", position = 9,
         description = "Announce each combat achievement task you complete, with its tier and name.")
-    default boolean shareCombatTasks() { return true; }
+    default boolean shareCombatTasks() { return false; }
 
     @ConfigItem(section = activitySection, keyName = "combatTaskMinTier", name = "Lowest combat task tier", position = 10,
         description = "Only announce combat tasks of this tier and above.")
     default CombatTaskTier combatTaskMinTier() { return CombatTaskTier.EASY; }
 
-    @ConfigItem(section = activitySection, keyName = "shareDiaries", name = "Announce diaries", position = 11,
+    @ConfigItem(warning = THIRD_PARTY_WARNING, section = activitySection, keyName = "shareDiaries", name = "Announce diaries", position = 11,
         description = "Announce each achievement diary tier you finish, with its area.")
-    default boolean shareDiaries() { return true; }
+    default boolean shareDiaries() { return false; }
 
     @ConfigItem(section = activitySection, keyName = "diaryMinTier", name = "Lowest diary tier", position = 12,
         description = "Only announce diaries of this tier and above.")
     default DiaryTier diaryMinTier() { return DiaryTier.EASY; }
 
-    @ConfigItem(section = activitySection, keyName = "shareClues", name = "Share clue completions", position = 2,
+    @ConfigItem(warning = THIRD_PARTY_WARNING, section = activitySection, keyName = "shareClues", name = "Share clue completions", position = 2,
         description = "Send the tier and your completion count each time you finish a clue, for clan clue stats.")
-    default boolean shareClues() { return true; }
+    default boolean shareClues() { return false; }
 
     // ── 10. Notices and panel ────────────────────────────────────────────────
     @ConfigItem(section = noticesSection, keyName = "chatNotices", name = "Chat messages", position = 0,

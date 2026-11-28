@@ -15,23 +15,31 @@ The key is a credential. Never put it in a screenshot, URL, issue, chat or log. 
 
 ## What is sent
 
-| Switch | Data and timing |
+| Setting | What it sends, and when |
 | --- | --- |
-| Connect | Your RSN, RuneLite account hash, world types, plugin version and chosen switches when linking; identity accompanies subsequent requests. Reads your revealed event view while logged in. |
-| File event drops automatically | Items, quantity, item price, source, time and recent KC when a drop matches a live rostered event or meets the clan’s Wall of Fame threshold. PvP loot is ignored. |
-| Attach a screenshot | The whole game window, including chat, with qualifying drops and new personal bests. |
-| Answer precheck questions from my bank | Counts for the specific staff-named items across bank, inventory and equipment. The panel shows exactly those counts before Send. Automatic sending for the rest of that event is a separate, initially unchecked choice. No bank or inventory snapshot leaves the computer. |
-| Share live XP and kill counts | Current totals for the skills and bosses your live events track, plus logged-in seconds during your live rostered events. Progress is provisional until Wise Old Man confirms it; this feed never scores. |
-| Sync my collection log… | Your collection log, combat achievements, levels, account type, group size, quests and diary completion. Collected when you open your own log; another player’s adventure log is ignored. Turn on the game’s collection-log notification to send new slots promptly. |
-| Record my personal bests | A newly announced PB’s boss, time, party size, recent KC, eleven worn equipment slots and combat levels. Staff approval is required. Without a picture it is marked “no picture”; an unmatched boss remains personal and unranked. |
-| Share my own deaths | Your own death and time, through the existing Wall of Shame path. No location, killer name, gear, inventory or loss-value calculation. Independent of automatic drops. |
-| Attach screenshots to my deaths | Publish the whole game window, including chat, to the clan’s configured death-announcement channel. Separate from drop/PB screenshots. |
-| Announce my new pets | Your own game pet notification. No clan broadcast or other player is inspected. |
-| Announce my level milestones | Newly reached 99s and hundred-level total milestones (500+); logging in with an existing 99 does not announce it. |
-| Share my clue completions | Own clue tier, completion total and time. Weekly reports are self-reported, never event scores. |
-| Relay clan chat | Typed messages from the clan channel named by the server: sender, text and timestamp. No guest, friends, public or private chat; system broadcasts are excluded. Relayed to the configured staff moderation channel with mentions disabled. |
+| Connect to ironcladrs.com | The one switch that lets this plugin talk to ironcladrs.com. Off: nothing is ever sent. On: it loads your events, team, tasks and claims into the side panel, and the uploads you pick in sections 2 to 9 can send. Each of those starts off. |
+| Event tile drops | When a drop matches a tile or target in a live event you are rostered in, file the claim for you: items, source, kill count and time. Staff still review every claim. If this is off, matching drops are not sent at all. |
+| Wall of Fame drops | Send other drops worth at least the Wall of Fame minimum so they are posted on the clan's Wall of Fame. Off: event drops still file, but are never posted to the wall by this plugin. |
+| Screenshots on drops | Add a screenshot of your whole game window, chat included, to each drop sent above, as proof for staff. |
+| Bank prechecks | When an event precheck asks how many of an item you own, open your bank and the side panel shows the exact counts it will send. Nothing is sent until you press Send. Only the asked items are counted, from bank, inventory and equipment. |
+| Live event progress | During events you are in, send XP and kill counts for the skills and bosses that event tracks, plus your logged-in minutes. The site shows it as waiting until Wise Old Man confirms it; scores only ever use Wise Old Man. |
+| Collection log | Send which collection log slots you have and how many, when you open your log and when you get a new slot. Used by Collection Log Hunt, collection prechecks and your site profile. Open your log once so it can be read. |
+| Combat achievements | Send your combat achievement tier totals and the IDs of tasks you have completed, when they change. Used for your profile and events that ask for CA tiers. |
+| Quests and diaries | Send each quest's state (not started, started, finished) and which achievement diary tiers you have done. Used to check event requirements. |
+| Levels and account type | Send your skill levels and whether you are an ironman, hardcore or group ironman. Used for your profile and event requirements. |
+| Submit personal bests | When the game says you set a new personal best, send the time, team size, worn gear and combat levels to the clan PB ladder. Staff approve it before it shows. |
+| Screenshots on PBs | Add a screenshot of your whole game window, chat included, to each personal best sent, as proof for staff. |
+| Relay clan chat | Copy the Ironclad clan channel to the clan's Discord, as Clan Chat Webhooks does: members' messages (sender, rank, account type, text and time) and the clan's system broadcasts. Guest, friends, public and private chat are never sent. |
+| Announce my deaths | Post your own deaths to the clan's Wall of Shame in Discord. No location, killer names or item losses are sent. |
+| Screenshots on deaths | Also post a screenshot of your game window, chat included, with each death. Anyone in the clan Discord channel can see it. |
+| Announce my pets | When you get a pet, send the game's pet message so the clan can celebrate it in Discord. |
+| Announce 99s and totals | Send your new 99s and total-level milestones for clan announcements. Levels you already had are never announced. |
+| Share clue completions | Send the tier and your completion count each time you finish a clue, for clan clue stats. |
+| Announce combat tasks | Announce each combat achievement task you complete, with its tier and name. |
+| Announce diaries | Announce each achievement diary tier you finish, with its area. |
+| Send PK loot | Send loot from player kills to the Wall of Fame as "Player kill". The other player's name is never sent. |
 
-All thirteen switches are off by default and carry RuneLite’s full third-party-server warning. Picture prechecks are explicit **Capture → preview → Send** actions; they do not depend on the automatic-screenshot switch. Bank rules may approve exact matches automatically; mismatches go to staff. A staff-selected collection-log precheck can use a fresh synced snapshot as evidence for review.
+Connect and all twenty upload settings are off by default and carry RuneLite’s full third-party-server warning. After linking, the panel's **Use clan defaults** button turns on the uploads the clan recommends in one press, after one confirmation that names each one and repeats the warning. Picture prechecks are explicit **Capture → preview → Send** actions; they do not depend on the automatic-screenshot switch. Bank rules may approve exact matches automatically; mismatches go to staff. A staff-selected collection-log precheck can use a fresh synced snapshot as evidence for review.
 
 **Screenshots include chat.** Event evidence is for the member and reviewing staff. Approved PB records, gear and proof can appear on the public ladder; profile visibility controls the member profile. Review your window before capturing a picture.
 
@@ -68,7 +76,7 @@ Future event types can use the same server-defined panel fields without a client
 
 ### Settings and clan defaults
 
-All 21 settings are grouped into nine collapsible RuneLite sections, initially closed. Connection/key, clan defaults, drops, event progress/prechecks, account/PBs, clan chat, deaths, activity and local notices have separate groups. Existing keys are unchanged.
+The 48 settings are grouped into ten collapsible RuneLite sections: Connect, Drops, Clan filters, Prechecks and progress, Account sync, Personal bests, Clan chat, Deaths, Pets, levels, clues, and Notices and panel. Existing keys are unchanged.
 
 Loot filters cover a personal non-event Wall of Fame minimum, exact comma-separated source exclusions and drops containing only excluded item names. Exclusions can prevent automatic event submissions. The value minimum never blocks an event match. A mixed drop keeps its entire item list so Dink de-duplication remains exact. These are core filters, not the full Dink settings catalogue.
 

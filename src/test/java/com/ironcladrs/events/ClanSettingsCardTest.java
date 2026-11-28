@@ -24,7 +24,7 @@ public class ClanSettingsCardTest
             { if (component instanceof JButton && ((JButton) component).getText().equals("Use personal settings")) { ((JButton) component).doClick(); clicked = true; } }
             assertTrue(clicked); verify(actions).clanSettings(false); verifyNoMoreInteractions(actions);
             // The card changes no upload switch itself: they keep their defaults.
-            assertTrue(config.connect()); assertTrue(config.autoDrops()); assertTrue(config.deathScreenshots());
+            assertFalse(config.connect()); assertFalse(config.autoDrops()); assertFalse(config.deathScreenshots());
         });
     }
     @Test public void clanDefaultsAsksOnlyForMissingRecommendedUploadsAndShowsTheWarning() throws Exception

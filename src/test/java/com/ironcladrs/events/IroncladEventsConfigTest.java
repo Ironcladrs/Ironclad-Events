@@ -11,18 +11,19 @@ public class IroncladEventsConfigTest
     private final IroncladEventsConfig config = new IroncladEventsConfig() {};
 
     @Test
-    public void everyUploadStartsOnLikeClanSocket()
+    public void connectAndEveryUploadStartOff()
     {
-        // User, 2026-11-27: "everything starts on like clan socket". Nothing is sent until the account is linked.
+        // Plugin Hub rule: anything that sends to a third-party server starts off (user, 2026-11-27, chose
+        // this over "everything starts on"; "Use clan defaults" turns them on in one press after linking).
         assertFalse(config.useClanSettings());
-        assertTrue(config.connect());
-        for (String key : IroncladEventsConfig.UPLOAD_KEYS) { assertTrue(key, IroncladEventsConfig.upload(config, key)); }
+        assertFalse(config.connect());
+        for (String key : IroncladEventsConfig.UPLOAD_KEYS) { assertFalse(key, IroncladEventsConfig.upload(config, key)); }
         assertEquals("", config.apiKey());
     }
 
-    /** One gate: Connect carries RuneLite's third-party warning and every upload key is a real setting. */
+    /** Connect and every upload carry RuneLite's third-party warning, and every upload key is a real setting. */
     @Test
-    public void connectIsTheOnlyWarnedSwitchAndEveryUploadKeyExists()
+    public void everySendingSwitchIsWarnedAndEveryUploadKeyExists()
     {
         Set<String> keys = new HashSet<>(), warned = new HashSet<>();
         for (Method method : IroncladEventsConfig.class.getMethods())
@@ -31,7 +32,8 @@ public class IroncladEventsConfigTest
             keys.add(item.keyName()); if (!item.warning().isEmpty()) { warned.add(item.keyName()); }
             assertTrue(item.keyName() + " name fits RuneLite's width", item.name().length() <= 25);
         }
-        assertEquals(Collections.singleton("connect"), warned);
+        Set<String> sending = new HashSet<>(Arrays.asList(IroncladEventsConfig.UPLOAD_KEYS)); sending.add("connect");
+        assertEquals(sending, warned);
         assertEquals(IroncladEventsConfig.UPLOAD_KEYS.length, IroncladEventsConfig.UPLOAD_LABELS.length);
         for (String key : IroncladEventsConfig.UPLOAD_KEYS) { assertTrue(key, keys.contains(key)); }
     }

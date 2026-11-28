@@ -28,7 +28,7 @@ public final class SetupCard extends JPanel
 
         JPanel uploads = Ui.card(); Ui.gap(this, 6); add(uploads);
         uploads.add(Ui.bold("What this plugin sends", Ui.CARD_WIDTH));
-        uploads.add(Ui.muted("Every switch starts on, so drops, prechecks, progress and the rest work as soon as you link. Nothing is sent until then. Turn any of them off in the plugin's settings (RuneLite's Configuration page).", Ui.CARD_WIDTH));
+        uploads.add(Ui.muted("Every upload starts off. Once you're linked, press Use clan defaults at the top to turn on what the clan recommends in one go, or turn each one on yourself in the plugin's settings (RuneLite's Configuration page). Nothing is sent until you do.", Ui.CARD_WIDTH));
         Ui.gap(uploads, 4);
         uploads.add(Ui.muted("For new-item updates, turn on collection log notifications in the game's settings.", Ui.CARD_WIDTH));
         Ui.link(uploads, "What is sent", "https://ironcladrs.com/privacy#plugin");
