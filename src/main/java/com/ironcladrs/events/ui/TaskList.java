@@ -116,7 +116,15 @@ public final class TaskList extends JPanel
         JToggleButton chip = new JToggleButton(text); chip.setFocusPainted(false); chip.setContentAreaFilled(false); chip.setOpaque(true);
         chip.setFont(FontManager.getRunescapeSmallFont()); chip.setForeground(Color.WHITE); chip.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
         chip.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        Runnable paint = () -> { chip.setBackground(chip.isSelected() ? ColorScheme.MEDIUM_GRAY_COLOR : ColorScheme.DARKER_GRAY_COLOR); chip.setForeground(chip.isSelected() ? Color.WHITE : Ui.MUTED); };
+        // A gold underline and bold text mark the chosen filter: RuneLite's look paints over a toggle's
+        // background, so a background shade alone didn't show (2026-11-27), as on the Event / My claims tabs.
+        Runnable paint = () -> {
+            boolean on = chip.isSelected();
+            chip.setBackground(on ? ColorScheme.MEDIUM_GRAY_COLOR : ColorScheme.DARKER_GRAY_COLOR); chip.setForeground(on ? Color.WHITE : Ui.MUTED);
+            chip.setFont(on ? FontManager.getRunescapeBoldFont() : FontManager.getRunescapeSmallFont());
+            chip.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, on ? Ui.GOLD : ColorScheme.DARKER_GRAY_COLOR), BorderFactory.createEmptyBorder(4, 4, 2, 4)));
+            chip.getAccessibleContext().setAccessibleName(chip.getText() + (on ? ", chosen" : ""));
+        };
         chip.addItemListener(e -> paint.run()); paint.run(); return chip;
     }
     /** One heading per category, in the order each category first appears; tasks keep their order inside it. */

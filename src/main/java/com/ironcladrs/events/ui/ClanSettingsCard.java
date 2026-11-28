@@ -85,16 +85,41 @@ public final class ClanSettingsCard extends JPanel
     private static String preview(JsonObject preset)
     {
         JsonObject filters = Json.object(preset, "filters"), recommended = Json.object(preset, "recommended");
-        StringBuilder text = new StringBuilder("Clan loot filters\n");
-        text.append("Wall of Fame minimum: ").append(Json.number(filters, "minimumWallValue", 0)).append(" gp (0 = the site's minimum)\n");
-        text.append("Never send these items: ").append(orNone(Json.text(filters, "ignoredLootItems"))).append('\n');
-        text.append("Never send from these: ").append(orNone(Json.text(filters, "ignoredLootSources"))).append("\n\nRecommended uploads\n");
+        // Every filter the clan sets, not just the first three (2026-11-27).
+        StringBuilder text = new StringBuilder("Clan filters\n");
+        for (java.util.Map.Entry<String, JsonElement> entry : filters.entrySet()) { text.append(filterLabel(entry.getKey())).append(": ").append(filterValue(entry.getKey(), entry.getValue())).append('\n'); }
+        if (filters.size() == 0) { text.append("none set\n"); }
+        text.append("\nRecommended uploads\n");
         for (int i = 0; i < IroncladEventsConfig.UPLOAD_KEYS.length; i++)
         { text.append(IroncladEventsConfig.UPLOAD_LABELS[i]).append(": ").append(Json.flag(recommended, IroncladEventsConfig.UPLOAD_KEYS[i]) ? "On" : "Off").append('\n'); }
         text.append("\nRevision ").append(Json.text(preset, "revision")).append(". Filters can stop an event drop from filing.");
         return text.toString();
     }
     private static String orNone(String value) { return value.trim().isEmpty() ? "none" : value; }
+    private static final java.util.Map<String, String> FILTER_LABELS = new java.util.HashMap<>();
+    static
+    {
+        String[][] labels = {{"minimumWallValue", "Wall of Fame minimum (gp, 0 = the site's minimum)"}, {"ignoredLootItems", "Never send these items"}, {"ignoredLootSources", "Never send from these"},
+            {"alwaysSendItems", "Always send these items"}, {"screenshotMinValue", "Screenshot drops worth at least (gp)"}, {"sendClueLoot", "Send clue scroll loot"}, {"screenshotScale", "Screenshot size (%)"},
+            {"relayBroadcasts", "Relay clan broadcasts"}, {"ignoredDeathRegions", "Ignore deaths in these regions"}, {"petDuplicates", "Announce duplicate pets"}, {"levelMinimum", "Lowest level announced"},
+            {"levelInterval", "Announce every N levels"}, {"virtualLevels", "Announce virtual levels"}, {"totalLevelInterval", "Announce total level every"}, {"clueMinTier", "Lowest clue tier shared"},
+            {"rarityOverride", "Rarity override (1 in X, 0 = off)"}, {"rarityAndValue", "Rare drops must also meet the minimum"}, {"sendPkLoot", "Send PK loot"}, {"ignoreSafeDeaths", "Ignore safe deaths"},
+            {"safeDeathExceptions", "Safe deaths that still count"}, {"caMinTier", "Lowest combat task tier"}, {"diaryMinTier", "Lowest diary tier"}};
+        for (String[] l : labels) { FILTER_LABELS.put(l[0], l[1]); }
+    }
+    private static String filterLabel(String key)
+    {
+        String known = FILTER_LABELS.get(key); if (known != null) { return known; }
+        String words = key.replaceAll("([a-z])([A-Z])", "$1 $2").toLowerCase(java.util.Locale.ROOT);
+        return words.isEmpty() ? key : Character.toUpperCase(words.charAt(0)) + words.substring(1);
+    }
+    private static String filterValue(String key, JsonElement value)
+    {
+        if (value == null || value.isJsonNull()) { return "none"; }
+        if (value.isJsonPrimitive() && value.getAsJsonPrimitive().isBoolean()) { return value.getAsBoolean() ? "On" : "Off"; }
+        String text = value.isJsonPrimitive() ? value.getAsString() : value.toString();
+        return orNone(text.replace('_', ' '));
+    }
     private static JScrollPane scroll(String text)
     {
         JTextArea area = new JTextArea(text, 18, 32); area.setLineWrap(true); area.setWrapStyleWord(true); area.setEditable(false); area.setCaretPosition(0);

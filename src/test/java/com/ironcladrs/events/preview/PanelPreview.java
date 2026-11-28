@@ -58,10 +58,11 @@ public final class PanelPreview
 		final BufferedImage[] shot = new BufferedImage[1];
 		SwingUtilities.invokeAndWait(() -> {
 			IroncladPanel panel = new IroncladPanel(config, null, actions);
-			panel.update(new SessionState(true, "Synced", Instant.now(), hello, sync), 0, actions);
+			// "setup" draws the first-run screen: not connected yet.
+			panel.update("setup".equals(view) ? SessionState.empty("Add your plugin key to connect.") : new SessionState(true, "Synced", Instant.now(), hello, sync), 0, actions);
 			// Optional "previewBank": {key: card} draws bank answers waiting to be sent.
 			if (sync.has("previewBank")) { java.util.Map<String, JsonObject> cards = new java.util.LinkedHashMap<>(); sync.getAsJsonObject("previewBank").entrySet().forEach(e -> cards.put(e.getKey(), e.getValue().getAsJsonObject())); panel.bank(cards); }
-			if (!view.isEmpty()) { panel.showTab(view); }
+			if (!view.isEmpty() && !"setup".equals(view)) { panel.showTab(view); }
 			JComponent root = panel;
 			int width = 242;
 			root.setSize(width, 6000); layout(root);
