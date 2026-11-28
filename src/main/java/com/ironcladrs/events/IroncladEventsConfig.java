@@ -1,5 +1,8 @@
 package com.ironcladrs.events;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
@@ -55,12 +58,14 @@ public interface IroncladEventsConfig extends Config
 
     /** Every switch that sends data. The panel's Enable clan defaults may only touch these keys. */
     String[] UPLOAD_KEYS = {"autoDrops", "wallOfFameDrops", "screenshots", "bankPrechecks", "liveProgress", "syncCollectionLog", "syncCombatAchievements",
-        "syncQuests", "syncLevels", "autoPbs", "pbScreenshots", "relayClanChat", "autoDeaths", "deathScreenshots", "sharePets", "shareMilestones", "shareClues"};
+        "syncQuests", "syncLevels", "autoPbs", "pbScreenshots", "relayClanChat", "autoDeaths", "deathScreenshots", "sharePets", "shareMilestones", "shareClues",
+        "shareCombatTasks", "shareDiaries", "sendPkLoot"};
 
     /** Plain-word label for each upload switch, in UPLOAD_KEYS order, for the panel and the clan-defaults dialog. */
     String[] UPLOAD_LABELS = {"Event tile drops", "Wall of Fame drops", "Screenshots on drops", "Bank prechecks", "Live event progress", "Collection log",
         "Combat achievements", "Quests and diaries", "Levels and account type", "Personal bests", "Screenshots on PBs", "Clan chat relay",
-        "Announce my deaths", "Screenshots on deaths", "Announce my pets", "Announce 99s and totals", "Clue completions"};
+        "Announce my deaths", "Screenshots on deaths", "Announce my pets", "Announce 99s and totals", "Clue completions",
+        "Combat task completions", "Achievement diary completions", "PK loot"};
 
     /** Reads an upload switch by key without reflection; unknown keys read as off. Static, so RuneLite's proxy never sees it. */
     static boolean upload(IroncladEventsConfig config, String key)
@@ -84,6 +89,9 @@ public interface IroncladEventsConfig extends Config
             case "sharePets": return config.sharePets();
             case "shareMilestones": return config.shareMilestones();
             case "shareClues": return config.shareClues();
+            case "shareCombatTasks": return config.shareCombatTasks();
+            case "shareDiaries": return config.shareDiaries();
+            case "sendPkLoot": return config.sendPkLoot();
             default: return false;
         }
     }
@@ -144,6 +152,19 @@ public interface IroncladEventsConfig extends Config
     @ConfigItem(section = dropsSection, keyName = "screenshotScale", name = "Screenshot size (%)", position = 9,
         description = "Shrink every screenshot this plugin sends (drops, personal bests, deaths) to this percentage of your game window. Smaller uploads faster.")
     default int screenshotScale() { return 100; }
+
+    @Range(min = 0)
+    @ConfigItem(section = dropsSection, keyName = "rarityOverride", name = "Rarity override (1 in X)", position = 10,
+        description = "A drop at least this rare goes to the Wall of Fame even below the minimum value. The odds come from ironcladrs.com (OSRSClans drop chances, the item's most common source). 0 turns it off.")
+    default int rarityOverride() { return 1000; }
+
+    @ConfigItem(section = dropsSection, keyName = "rarityAndValue", name = "Rare must meet min value", position = 11,
+        description = "On: a rare drop still has to be worth the Wall of Fame minimum (Dink's \"Require both\").")
+    default boolean rarityAndValue() { return false; }
+
+    @ConfigItem(section = dropsSection, keyName = "sendPkLoot", name = "Send PK loot", position = 12,
+        description = "Send loot from player kills to the Wall of Fame as \"Player kill\". The other player's name is never sent.")
+    default boolean sendPkLoot() { return true; }
 
     // ── 3. Clan loot filters ─────────────────────────────────────────────────
     @ConfigItem(section = clanSection, keyName = "useClanSettings", name = "Use clan filters", position = 0,
@@ -207,6 +228,14 @@ public interface IroncladEventsConfig extends Config
         description = "Region IDs separated by commas (shown by RuneLite's developer tools or the wiki). Deaths there are never announced, for example safe minigames like Castle Wars (9520) or the Inferno practice area.")
     default String ignoredDeathRegions() { return ""; }
 
+    @ConfigItem(section = deathsSection, keyName = "ignoreSafeDeaths", name = "Ignore safe deaths", position = 3,
+        description = "Don't announce deaths where nothing is lost: Castle Wars, Soul Wars, LMS, PvP Arena, NMZ, Pest Control, Barbarian Assault, your house, the Gauntlet and raids (for non-hardcore accounts) and more. Hardcore accounts always count.")
+    default boolean ignoreSafeDeaths() { return true; }
+
+    @ConfigItem(section = deathsSection, keyName = "safeDeathExceptions", name = "Safe deaths still shown", position = 4,
+        description = "Safe deaths you still want announced, for example the Inferno or the Fight Caves.")
+    default Set<SafeDeathException> safeDeathExceptions() { return EnumSet.of(SafeDeathException.INFERNO, SafeDeathException.FIGHT_CAVE, SafeDeathException.JAD_CHALLENGES); }
+
     // ── 9. Pets, levels, clues ───────────────────────────────────────────────
     @ConfigItem(section = activitySection, keyName = "sharePets", name = "Announce my pets", position = 0,
         description = "When you get a pet, send the game's pet message so the clan can celebrate it in Discord.")
@@ -242,6 +271,22 @@ public interface IroncladEventsConfig extends Config
     @ConfigItem(section = activitySection, keyName = "clueMinTier", name = "Lowest clue tier", position = 8,
         description = "Only share clue completions of this tier and above.")
     default ClueTier clueMinTier() { return ClueTier.BEGINNER; }
+
+    @ConfigItem(section = activitySection, keyName = "shareCombatTasks", name = "Announce combat tasks", position = 9,
+        description = "Announce each combat achievement task you complete, with its tier and name.")
+    default boolean shareCombatTasks() { return true; }
+
+    @ConfigItem(section = activitySection, keyName = "combatTaskMinTier", name = "Lowest combat task tier", position = 10,
+        description = "Only announce combat tasks of this tier and above.")
+    default CombatTaskTier combatTaskMinTier() { return CombatTaskTier.EASY; }
+
+    @ConfigItem(section = activitySection, keyName = "shareDiaries", name = "Announce diaries", position = 11,
+        description = "Announce each achievement diary tier you finish, with its area.")
+    default boolean shareDiaries() { return true; }
+
+    @ConfigItem(section = activitySection, keyName = "diaryMinTier", name = "Lowest diary tier", position = 12,
+        description = "Only announce diaries of this tier and above.")
+    default DiaryTier diaryMinTier() { return DiaryTier.EASY; }
 
     @ConfigItem(section = activitySection, keyName = "shareClues", name = "Share clue completions", position = 2,
         description = "Send the tier and your completion count each time you finish a clue, for clan clue stats.")

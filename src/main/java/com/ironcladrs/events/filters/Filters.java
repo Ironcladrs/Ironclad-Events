@@ -22,6 +22,11 @@ public final class Filters
     public final boolean sendClueLoot, relayBroadcasts, petDuplicates, virtualLevels;
     public final int levelMinimum, levelInterval, totalLevelInterval, screenshotScale;
     public final ClueTier clueMinTier;
+    public final int rarityOverride;
+    public final boolean rarityAndValue, sendPkLoot, ignoreSafeDeaths;
+    public final Set<com.ironcladrs.events.SafeDeathException> safeDeathExceptions;
+    public final com.ironcladrs.events.CombatTaskTier combatTaskMinTier;
+    public final com.ironcladrs.events.DiaryTier diaryMinTier;
 
     public Filters(IroncladEventsConfig config, SessionState state)
     {
@@ -41,6 +46,23 @@ public final class Filters
         virtualLevels = flag(f, "virtualLevels", config.virtualLevels());
         totalLevelInterval = (int) number(f, "totalLevelInterval", config.totalLevelInterval(), 25, 500);
         clueMinTier = f.has("clueMinTier") ? ClueTier.of(Json.text(f, "clueMinTier")) : config.clueMinTier();
+        rarityOverride = (int) number(f, "rarityOverride", config.rarityOverride(), 0, 10_000_000);
+        rarityAndValue = flag(f, "rarityAndValue", config.rarityAndValue());
+        sendPkLoot = flag(f, "sendPkLoot", config.sendPkLoot());
+        ignoreSafeDeaths = flag(f, "ignoreSafeDeaths", config.ignoreSafeDeaths());
+        if (f.has("safeDeathExceptions"))
+        {
+            Set<com.ironcladrs.events.SafeDeathException> chosen = EnumSet.noneOf(com.ironcladrs.events.SafeDeathException.class);
+            for (String name : Json.text(f, "safeDeathExceptions").split(",")) { com.ironcladrs.events.SafeDeathException e = com.ironcladrs.events.SafeDeathException.of(name); if (e != null) { chosen.add(e); } }
+            safeDeathExceptions = chosen;
+        }
+        else
+        {
+            Set<com.ironcladrs.events.SafeDeathException> own = config.safeDeathExceptions();
+            safeDeathExceptions = own == null || own.isEmpty() ? EnumSet.noneOf(com.ironcladrs.events.SafeDeathException.class) : EnumSet.copyOf(own);
+        }
+        combatTaskMinTier = f.has("caMinTier") ? com.ironcladrs.events.CombatTaskTier.of(Json.text(f, "caMinTier")) : config.combatTaskMinTier();
+        diaryMinTier = f.has("diaryMinTier") ? com.ironcladrs.events.DiaryTier.of(Json.text(f, "diaryMinTier")) : config.diaryMinTier();
         // The account list is always the member's own: it is about their alts, not the clan.
         onlyAccounts = names(config.onlyAccounts());
     }
@@ -57,6 +79,10 @@ public final class Filters
     public int totalMilestone(int now) { return now / totalLevelInterval * totalLevelInterval; }
     public boolean sharesClue(String tier) { return ClueTier.of(tier).ordinal() >= clueMinTier.ordinal(); }
     public boolean ignoresDeathIn(int regionId) { return ignoredDeathRegions.contains(Integer.toString(regionId)); }
+    /** Rare enough for the override ("1 in N" at least the chosen X)? Off when X is 0. */
+    public boolean rare(int oneInN) { return rarityOverride > 0 && oneInN >= rarityOverride; }
+    public boolean announcesCombatTask(String tier) { return com.ironcladrs.events.CombatTaskTier.of(tier).ordinal() >= combatTaskMinTier.ordinal(); }
+    public boolean announcesDiary(String tier) { return com.ironcladrs.events.DiaryTier.of(tier).ordinal() >= diaryMinTier.ordinal(); }
 
     // ── Reading the clan's values, falling back to the member's own ─────────
     private static String text(JsonObject f, String key, String own) { return f.has(key) ? Json.text(f, key) : own == null ? "" : own; }

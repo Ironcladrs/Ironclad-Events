@@ -23,7 +23,7 @@ public class SyncServiceTest
     {
         sync = new SyncService(); guard = mock(PlayerGuard.class); ApiClient api = mock(ApiClient.class);
         when(guard.identity()).thenReturn(TestSupport.identity()); when(guard.generation()).thenReturn(1L);
-        TestSupport.inject(sync, "guard", guard); TestSupport.inject(sync, "api", api);
+        TestSupport.inject(sync, "guard", guard); TestSupport.inject(sync, "api", api); TestSupport.inject(sync,"rarity",new com.ironcladrs.events.filters.RarityTable());
         TestSupport.inject(sync, "config", new IroncladEventsConfig() { @Override public boolean connect() { return true; } });
         TestSupport.inject(sync, "notices", mock(ChatNotices.class));
         doAnswer(call -> { paths.add(call.getArgument(2)); callback = call.getArgument(6); return null; })

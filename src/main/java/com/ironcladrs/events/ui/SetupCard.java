@@ -47,6 +47,8 @@ public final class SetupCard extends JPanel
             case "sharePets": return "pets";
             case "shareMilestones": return "milestones";
             case "shareClues": return "clues";
+            case "shareCombatTasks": case "shareDiaries": return "milestones";
+            case "sendPkLoot": return "loot";
             default: return key;
         }
     }

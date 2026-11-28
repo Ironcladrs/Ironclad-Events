@@ -17,6 +17,8 @@ import net.runelite.client.util.Text;
 @Singleton
 public class ActivityCollector
 {
+    private static final Pattern COMBAT_TASK = Pattern.compile("Congratulations, you've completed an? (easy|medium|hard|elite|master|grandmaster) combat task: (.+?)(?: \\([0-9]+ points?\\))?\\.?$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern DIARY = Pattern.compile("Congratulations! You have completed all of the (easy|medium|hard|elite) tasks in the (.+?) area", Pattern.CASE_INSENSITIVE);
     private static final Pattern CLUE = Pattern.compile("You have completed ([0-9,]+) (beginner|easy|medium|hard|elite|master) Treasure Trails?\\.", Pattern.CASE_INSENSITIVE);
     @Inject private Client client;
     @Inject private Consent consent;
@@ -51,6 +53,18 @@ public class ActivityCollector
             // "...would have been followed" is a pet the player already owns.
             boolean duplicate = text.contains("would have been followed");
             if (!duplicate || filters().petDuplicates) { add("pets", "pet:" + client.getTickCount(), Json.obj("kind", "pet")); }
+        }
+        Matcher task = COMBAT_TASK.matcher(text);
+        if (task.find())
+        {
+            String tier = task.group(1).toLowerCase(Locale.ROOT), name = task.group(2).trim();
+            if (filters().announcesCombatTask(tier)) { add("combatTasks", "ca:" + name.toLowerCase(Locale.ROOT), Json.obj("kind", "ca", "tier", tier, "name", name)); }
+        }
+        Matcher diary = DIARY.matcher(text);
+        if (diary.find())
+        {
+            String tier = diary.group(1).toLowerCase(Locale.ROOT), area = diary.group(2).trim();
+            if (filters().announcesDiary(tier)) { add("diaries", "diary:" + tier + ":" + area.toLowerCase(Locale.ROOT), Json.obj("kind", "diary", "tier", tier, "area", area)); }
         }
         Matcher clue = CLUE.matcher(text);
         if (clue.find())

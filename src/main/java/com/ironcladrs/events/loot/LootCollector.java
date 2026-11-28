@@ -12,6 +12,7 @@ import net.runelite.api.Client;
 import net.runelite.client.events.ServerNpcLoot;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.loottracker.LootReceived;
+import net.runelite.client.events.PlayerLootReceived;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.game.ItemStack;
 import net.runelite.http.api.loottracker.LootRecordType;
@@ -29,6 +30,12 @@ public class LootCollector
     {
         if (!consent.allows("loot")) { return; }
         collect(event.getItems(), event.getComposition().getName(), "NPC", event.getComposition().getId());
+    }
+    /** Loot from a player kill: the other player's name never leaves the client (only "Player kill"). */
+    @Subscribe public void onPlayerLootReceived(PlayerLootReceived event)
+    {
+        if (!consent.allows("loot")) { return; }
+        collect(event.getItems(), "Player kill", "PLAYER", null);
     }
     @Subscribe public void onLootReceived(LootReceived event)
     {

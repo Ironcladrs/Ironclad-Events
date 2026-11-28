@@ -34,7 +34,10 @@ public class DeathListener
             if (here != null) { region = net.runelite.api.coords.WorldPoint.fromLocalInstance(client, here).getRegionID(); }
         }
         catch (RuntimeException ignored) { region = -1; /* Location unknown: announce as usual. */ }
-        if (region >= 0 && new com.ironcladrs.events.filters.Filters(config, sync.state()).ignoresDeathIn(region)) { return; }
+        com.ironcladrs.events.filters.Filters filters = new com.ironcladrs.events.filters.Filters(config, sync.state());
+        if (region >= 0 && filters.ignoresDeathIn(region)) { return; }
+        // Nothing lost: not Wall of Shame material (Dink's rules, SafeDeaths), unless chosen to still count.
+        if (region >= 0 && filters.ignoreSafeDeaths && SafeDeaths.safe(client, region, filters.safeDeathExceptions)) { return; }
         com.google.gson.JsonObject payload = Json.obj("at", Instant.now());
         if (config.deathScreenshots()) { screenshots.capture(bytes -> outbox.submit("deaths", "/death", payload, bytes, ignored -> {})); }
         else { outbox.submit("deaths", "/death", payload, null, ignored -> {}); }

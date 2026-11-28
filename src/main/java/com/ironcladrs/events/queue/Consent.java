@@ -15,11 +15,14 @@ public class Consent
     public boolean allows(String feature)
     {
         guard.refresh();
-        if (!config.connect() || guard.identity() == null || !sync.current() || !sync.state().feature(feature)) { return false; }
+        String server = feature.equals("combatTasks") || feature.equals("diaries") ? "milestones" : feature;
+        if (!config.connect() || guard.identity() == null || !sync.current() || !sync.state().feature(server)) { return false; }
         if (!new com.ironcladrs.events.filters.Filters(config, sync.state()).accountAllowed(guard.identity().rsn)) { return false; }
         switch (feature)
         {
             case "loot": return config.autoDrops() || config.wallOfFameDrops();
+            case "combatTasks": return config.shareCombatTasks();
+            case "diaries": return config.shareDiaries();
             case "prechecks": return true;
             case "bankPrechecks": return config.bankPrechecks();
             case "captain": return true;

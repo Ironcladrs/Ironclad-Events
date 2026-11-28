@@ -19,6 +19,7 @@ public class SyncService
     @Inject private IroncladEventsConfig config;
     @Inject private ApiClient api;
     @Inject private ChatNotices notices;
+    @Inject private com.ironcladrs.events.filters.RarityTable rarity;
     private SessionState state = SessionState.empty("Connect in settings to get started.");
     private Consumer<SessionState> listener = ignored -> {};
     private boolean busy, blocked;
@@ -62,7 +63,8 @@ public class SyncService
             if (compareVersions(ApiClient.VERSION, Json.text(result.data, "minVersion")) < 0)
             { blocked = true; publish(SessionState.empty("Update Ironclad Events to connect.")); return; }
             failures = 0; next = Instant.EPOCH;
-            publish(new SessionState(true, "Connected", null, result.data, new JsonObject()));
+            JsonObject hello = result.data.deepCopy(); rarity.update(Json.object(hello, "rarity")); hello.remove("rarity");
+            publish(new SessionState(true, "Connected", null, hello, new JsonObject()));
             tick(Instant.now());
         });
     }
