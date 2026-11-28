@@ -35,7 +35,9 @@ public final class TaskList extends JPanel
         JPanel chips = new JPanel(new GridLayout(1, 3, 4, 0)); chips.setOpaque(false); chips.add(open); chips.add(done); chips.add(all); add(Ui.fit(chips));
         open.addActionListener(e -> { show = "open"; filter(); }); done.addActionListener(e -> { show = "done"; filter(); }); all.addActionListener(e -> { show = "all"; filter(); });
         Ui.gap(this, 4);
-        JTextField search = new JTextField(); search.setToolTipText("Search tasks"); search.getAccessibleContext().setAccessibleName("Search tasks");
+        JTextField search = new JTextField(); search.setToolTipText("Search by task, boss, item or activity");
+        // Hint inside the empty box (RuneLite's look is FlatLaf, which draws it).
+        search.putClientProperty("JTextField.placeholderText", "Boss, item or activity"); search.getAccessibleContext().setAccessibleName("Search tasks");
         search.setBackground(ColorScheme.DARKER_GRAY_COLOR); search.setForeground(Color.WHITE); search.setCaretColor(Color.WHITE);
         search.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(ColorScheme.MEDIUM_GRAY_COLOR), BorderFactory.createEmptyBorder(3, 5, 3, 5)));
         JPanel find = new JPanel(new BorderLayout(6, 0)); find.setOpaque(false);
@@ -74,7 +76,7 @@ public final class TaskList extends JPanel
             JComponent wrapped = row;
             if (shortText.isEmpty() && !progress.isEmpty())
             { JPanel stack = Ui.column(); stack.setOpaque(false); stack.add(row); JLabel more = Ui.muted(progress, Ui.WIDTH - 20); more.setBorder(BorderFactory.createEmptyBorder(0, 20, 2, 0)); stack.add(more); wrapped = Ui.fit(stack); }
-            rows.add(wrapped); labels.add(Json.norm(title + " " + category)); finished.add(isDone); headingOf.add(headings.size() - 1); add(wrapped);
+            rows.add(wrapped); labels.add(Json.norm(title + " " + category + " " + Json.text(task, "search"))); finished.add(isDone); headingOf.add(headings.size() - 1); add(wrapped);
         }
         search.getDocument().addDocumentListener(new DocumentListener()
         {
