@@ -47,7 +47,7 @@ public final class TaskList extends JPanel
         for (JsonObject task : byCategory(tasks))
         {
             if (++count > 300) { break; }
-            String nextCategory = Json.text(task, "category");
+            String nextCategory = heading(task);
             if (!nextCategory.equals(category))
             {
                 category = nextCategory;
@@ -76,7 +76,7 @@ public final class TaskList extends JPanel
             JComponent wrapped = row;
             if (shortText.isEmpty() && !progress.isEmpty())
             { JPanel stack = Ui.column(); stack.setOpaque(false); stack.add(row); JLabel more = Ui.muted(progress, Ui.WIDTH - 20); more.setBorder(BorderFactory.createEmptyBorder(0, 20, 2, 0)); stack.add(more); wrapped = Ui.fit(stack); }
-            rows.add(wrapped); labels.add(Json.norm(title + " " + category + " " + Json.text(task, "search"))); finished.add(isDone); headingOf.add(headings.size() - 1); add(wrapped);
+            rows.add(wrapped); labels.add(Json.norm(title + " " + category + " " + Json.text(task, "category") + " " + Json.text(task, "search"))); finished.add(isDone); headingOf.add(headings.size() - 1); add(wrapped);
         }
         search.getDocument().addDocumentListener(new DocumentListener()
         {
@@ -112,11 +112,13 @@ public final class TaskList extends JPanel
         chip.addItemListener(e -> paint.run()); paint.run(); return chip;
     }
     /** One heading per category, in the order each category first appears; tasks keep their order inside it. */
+    /** The site's own grouping (board, region, rope, column, level, floor), or the category before it sent one. */
+    public static String heading(JsonObject task) { String group = Json.text(task, "group"); return group.isEmpty() ? Json.text(task, "category") : group; }
     public static List<JsonObject> byCategory(JsonArray tasks)
     {
         Map<String, List<JsonObject>> groups = new LinkedHashMap<>();
         for (JsonElement value : tasks)
-        { if (value.isJsonObject()) { JsonObject task = value.getAsJsonObject(); groups.computeIfAbsent(Json.text(task, "category"), key -> new ArrayList<>()).add(task); } }
+        { if (value.isJsonObject()) { JsonObject task = value.getAsJsonObject(); groups.computeIfAbsent(heading(task), key -> new ArrayList<>()).add(task); } }
         List<JsonObject> result = new ArrayList<>(); groups.values().forEach(result::addAll); return result;
     }
     private static JLabel icon(JsonObject task, ItemManager items)

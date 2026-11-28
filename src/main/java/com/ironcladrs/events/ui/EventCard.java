@@ -55,6 +55,23 @@ public final class EventCard extends JPanel
         int owed = Json.array(event, "prechecksOwed").size();
         if (owed > 0 && prechecks != null) { Ui.section(this, key + "prechecks", "Prechecks owed", Integer.toString(owed), closed).add(prechecks); }
 
+        // ── Domination: territories one step from taking or losing (server: pluginAreas.js) ──
+        JsonArray closeCalls = Json.array(event, "closeCalls");
+        if (closeCalls.size() > 0)
+        {
+            JPanel body = Ui.section(this, key + "close", "Close calls", Integer.toString(closeCalls.size()), closed);
+            for (JsonElement value : closeCalls)
+            {
+                if (!value.isJsonObject()) { continue; } JsonObject row = value.getAsJsonObject(); boolean risk = "risk".equals(Json.text(row, "kind"));
+                body.add(Ui.line(Ui.pill(risk ? "At risk" : "Within reach", risk ? Ui.BAD : Ui.GOOD), Ui.bold(Json.text(row, "name"), Ui.CARD_WIDTH - 80)));
+                body.add(Ui.muted(Json.text(row, "text"), Ui.WIDTH)); Ui.gap(body, 4);
+            }
+        }
+
+        // ── Battleship Bingo: the enemy fleet, updated as your team sinks ships and finds buoys ──
+        JsonObject fleet = Json.object(event, "fleet");
+        if (fleet.size() > 0) { fleet(fleet, key, closed); }
+
         // ── Your team: rank and score, with a bar when the score is "x of y" ──
         JsonObject team = Json.object(event, "team");
         if (team.size() > 0)
@@ -122,6 +139,21 @@ public final class EventCard extends JPanel
             }
         }
 
+        // ── Domination: who holds each region and its kingdom bonus ──
+        JsonArray areas = Json.array(event, "areas");
+        if (areas.size() > 0)
+        {
+            int ours = 0; for (JsonElement value : areas) { if (value.isJsonObject() && "yours".equals(Json.text(value.getAsJsonObject(), "status"))) { ours++; } }
+            JPanel body = Ui.section(this, key + "areas", "Regions", ours + " of " + areas.size() + " yours", closed);
+            for (JsonElement value : areas)
+            {
+                if (!value.isJsonObject()) { continue; } JsonObject row = value.getAsJsonObject(); String status = Json.text(row, "status");
+                body.add(Ui.line(Ui.pill("yours".equals(status) ? "Yours" : "theirs".equals(status) ? "Theirs" : "Open", "yours".equals(status) ? Ui.GOOD : "theirs".equals(status) ? Ui.BAD : Ui.MUTED),
+                    Ui.bold(Json.text(row, "name"), Ui.CARD_WIDTH - 60)));
+                body.add(Ui.muted(Json.text(row, "text"), Ui.WIDTH)); Ui.gap(body, 4);
+            }
+        }
+
         // ── Standings: medal colours for the top three, your team highlighted ──
         JsonArray standings = Json.array(event, "standings");
         if (standings.size() > 0)
@@ -186,5 +218,33 @@ public final class EventCard extends JPanel
         JLabel team = Ui.name(name + (mine ? " (you)" : "")); team.setForeground(mine ? Color.WHITE : Ui.TEXT); if (mine) { team.setFont(FontManager.getRunescapeBoldFont()); }
         JLabel value = new JLabel(Ui.plain(score)); value.setForeground(mine ? Color.WHITE : Ui.MUTED); value.setFont(FontManager.getRunescapeSmallFont());
         row.add(place, BorderLayout.WEST); row.add(team, BorderLayout.CENTER); row.add(value, BorderLayout.EAST); return Ui.fit(row);
+    }
+
+    /** Enemy ship types (sunk or afloat), buoys found of each type, your shots and your own fleet. */
+    private void fleet(JsonObject fleet, String key, Set<String> closed)
+    {
+        JsonArray ships = Json.array(fleet, "ships"); int sunk = 0;
+        for (JsonElement value : ships) { if (value.isJsonObject() && Json.flag(value.getAsJsonObject(), "sunk")) { sunk++; } }
+        String enemy = Json.text(fleet, "enemyName");
+        JPanel body = Ui.section(this, key + "fleet", "Enemy fleet" + (enemy.isEmpty() ? "" : ": " + enemy), sunk + " of " + ships.size() + " sunk", closed);
+        for (JsonElement value : ships)
+        {
+            if (!value.isJsonObject()) { continue; } JsonObject ship = value.getAsJsonObject(); boolean down = Json.flag(ship, "sunk");
+            body.add(Ui.line(Ui.pill(down ? "Sunk" : "Afloat", down ? Ui.GOOD : Ui.MUTED), Ui.text(Json.text(ship, "label") + " (" + Json.number(ship, "length", 0) + ")", Ui.CARD_WIDTH - 60)));
+        }
+        JsonArray buoys = Json.array(fleet, "buoys");
+        if (buoys.size() > 0)
+        {
+            Ui.gap(body, 4); JLabel title = Ui.muted("Buoys found", Ui.WIDTH); title.setForeground(Ui.GOLD); body.add(title);
+            for (JsonElement value : buoys)
+            {
+                if (!value.isJsonObject()) { continue; } JsonObject buoy = value.getAsJsonObject();
+                body.add(Ui.row(Json.text(buoy, "label"), Json.number(buoy, "found", 0) + " of " + Json.number(buoy, "total", 0), false));
+            }
+        }
+        JsonObject shots = Json.object(fleet, "shots"), mine = Json.object(fleet, "yourFleet");
+        Ui.gap(body, 4);
+        body.add(Ui.row("Your shots", Json.number(shots, "hits", 0) + " hit, " + Json.number(shots, "misses", 0) + " miss", false));
+        if (Json.number(mine, "total", 0) > 0) { body.add(Ui.row("Your fleet", Json.number(mine, "afloat", 0) + " of " + Json.number(mine, "total", 0) + " afloat", false)); }
     }
 }
