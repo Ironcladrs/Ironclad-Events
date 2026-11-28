@@ -56,6 +56,8 @@ public final class PanelPreview
 		SwingUtilities.invokeAndWait(() -> {
 			IroncladPanel panel = new IroncladPanel(config, null, actions);
 			panel.update(new SessionState(true, "Synced", Instant.now(), hello, sync), 0, actions);
+			// Optional "previewBank": {key: card} draws bank answers waiting to be sent.
+			if (sync.has("previewBank")) { java.util.Map<String, JsonObject> cards = new java.util.LinkedHashMap<>(); sync.getAsJsonObject("previewBank").entrySet().forEach(e -> cards.put(e.getKey(), e.getValue().getAsJsonObject())); panel.bank(cards); }
 			if (!view.isEmpty()) { panel.showTab(view); }
 			JComponent root = panel;
 			int width = 242;

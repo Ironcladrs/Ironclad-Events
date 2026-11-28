@@ -20,7 +20,7 @@ public final class BankSendCard extends JPanel
             add(Ui.row(name, "x" + entry.getValue().getAsLong(), false));
         });
         add(Ui.muted("Counted from your bank, inventory and equipment only.", Ui.CARD_WIDTH));
-        JCheckBox automatic = new JCheckBox("Send automatically for this event"); automatic.setOpaque(false); automatic.setToolTipText("For the rest of this event only; forgotten on logout or restart."); add(automatic);
+        JCheckBox automatic = new JCheckBox("Send automatically"); automatic.setOpaque(false); automatic.setToolTipText("For the rest of this event only; forgotten on logout or restart."); add(automatic);
         add(Ui.buttons(Ui.button("Send", () -> actions.bank(eventId, precheckId, automatic.isSelected())), Ui.button("Not now", () -> actions.dismissBank(eventId, precheckId))));
     }
 }

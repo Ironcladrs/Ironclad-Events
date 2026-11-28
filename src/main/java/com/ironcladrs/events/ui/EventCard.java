@@ -51,6 +51,10 @@ public final class EventCard extends JPanel
         Ui.gap(card, 6); Ui.link(card, "Open event on site", Json.text(event, "url"));
         if (!EventView.supported(event)) { Ui.gap(card, 4); card.add(Ui.text(EventView.message(event), Ui.CARD_WIDTH)); return; }
 
+        // ── Prechecks: something to do now, so straight under the event, above team and standings ──
+        int owed = Json.array(event, "prechecksOwed").size();
+        if (owed > 0 && prechecks != null) { Ui.section(this, key + "prechecks", "Prechecks owed", Integer.toString(owed), closed).add(prechecks); }
+
         // ── Your team: rank and score, with a bar when the score is "x of y" ──
         JsonObject team = Json.object(event, "team");
         if (team.size() > 0)
@@ -117,10 +121,6 @@ public final class EventCard extends JPanel
                 else { ask.add(Ui.muted("Answer this on the site for now.", Ui.CARD_WIDTH)); }
             }
         }
-
-        // ── Prechecks ──
-        int owed = Json.array(event, "prechecksOwed").size();
-        if (owed > 0 && prechecks != null) { Ui.section(this, key + "prechecks", "Prechecks owed", Integer.toString(owed), closed).add(prechecks); }
 
         // ── Standings: medal colours for the top three, your team highlighted ──
         JsonArray standings = Json.array(event, "standings");

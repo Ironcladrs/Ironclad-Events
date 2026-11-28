@@ -146,6 +146,8 @@ public final class IroncladPanel extends PluginPanel
     private void renderEvent()
     {
         if (!state.message.isEmpty() && !state.message.equals("Synced")) { content.add(Ui.muted(state.message, Ui.WIDTH)); }
+        // A bank answer waiting to be sent goes first (user, 2026-11-27: it "showed at the bottom, not near the top").
+        renderBank(); content.add(bankContent);
         JsonArray events = state.events();
         if (events.size() == 0)
         {
@@ -172,6 +174,5 @@ public final class IroncladPanel extends PluginPanel
             { precheckSchemas.put(selected, owed.deepCopy()); precheckViews.put(selected, new PrecheckList(selected, owed, actions, state.feature("prechecks"), state.feature("bankPrechecks"))); }
             content.add(new EventCard(chosen, Json.array(state.sync(), "claims"), items, actions, precheckViews.get(selected), state.feature("captain"), closed));
         }
-        renderBank(); content.add(bankContent);
     }
 }
