@@ -52,6 +52,9 @@ public final class PanelPreview
 		hello.add("features", features);
 		hello.addProperty("clanName", "Ironclad");
 		String view = args.length > 2 ? args[2] : "";
+		// Draw with RuneLite's own look, so colours match the client (a gold button read fine in Java's
+		// default look but not in RuneLite, 2026-11-27).
+		SwingUtilities.invokeAndWait(() -> { try { javax.swing.UIManager.setLookAndFeel(new net.runelite.client.ui.laf.RuneLiteLAF()); } catch (Exception ex) { throw new IllegalStateException(ex); } });
 		final BufferedImage[] shot = new BufferedImage[1];
 		SwingUtilities.invokeAndWait(() -> {
 			IroncladPanel panel = new IroncladPanel(config, null, actions);

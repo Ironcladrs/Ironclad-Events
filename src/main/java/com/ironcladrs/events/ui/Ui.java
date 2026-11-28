@@ -231,22 +231,26 @@ public final class Ui
         {
             Graphics2D g2 = (Graphics2D) g.create(); g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             g2.setColor(on ? GOOD.darker() : ColorScheme.MEDIUM_GRAY_COLOR); g2.fillRoundRect(0, 2, 28, 12, 12, 12);
-            if (isFocusOwner()) { g2.setColor(Color.WHITE); g2.drawRoundRect(0, 2, 28, 12, 12, 12); }
+            // Off still has to look clickable on a dark card (2026-11-27), so it gets a gold outline.
+            if (isFocusOwner() || !on) { g2.setColor(isFocusOwner() ? Color.WHITE : GOLD); g2.drawRoundRect(0, 2, 28, 12, 12, 12); }
             g2.setColor(on ? Color.WHITE : ColorScheme.LIGHT_GRAY_COLOR); g2.fillOval(on ? 15 : 1, 1, 14, 14); g2.dispose();
         }
     }
 
     // ── Buttons and links ────────────────────────────────────────────────────
     public static JButton button(String text, Runnable action) { return styled(new JButton(plain(text)), action, false); }
-    /** The one main action on a screen: the clan's gold, dark text. */
+    /**
+     * The one main action on a screen: dark fill, gold outline and gold text. Not a gold fill: RuneLite's
+     * look-and-feel can repaint button text light, which vanished on gold in the client (2026-11-27).
+     */
     public static JButton primary(String text, Runnable action) { return styled(new JButton(plain(text)), action, true); }
     /** Flat buttons in RuneLite's own greys, with a hover shade and a visible keyboard focus ring. */
     private static JButton styled(JButton button, Runnable action, boolean main)
     {
-        Color base = main ? GOLD : ColorScheme.DARKER_GRAY_COLOR.brighter(), hover = main ? GOLD.brighter() : ColorScheme.DARK_GRAY_HOVER_COLOR;
+        Color base = main ? ColorScheme.DARKER_GRAY_COLOR : ColorScheme.DARKER_GRAY_COLOR.brighter(), hover = ColorScheme.DARK_GRAY_HOVER_COLOR;
         button.setAlignmentX(Component.LEFT_ALIGNMENT); button.setFocusPainted(false); button.setContentAreaFilled(false); button.setOpaque(true);
-        button.setBackground(base); button.setForeground(main ? new Color(25, 20, 5) : Color.WHITE); button.setFont(FontManager.getRunescapeSmallFont());
-        button.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(main ? GOLD.darker() : ColorScheme.MEDIUM_GRAY_COLOR), BorderFactory.createEmptyBorder(5, 8, 5, 8)));
+        button.setBackground(base); button.setForeground(main ? GOLD : Color.WHITE); button.setFont(main ? FontManager.getRunescapeBoldFont() : FontManager.getRunescapeSmallFont());
+        button.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(main ? GOLD : ColorScheme.MEDIUM_GRAY_COLOR, main ? 2 : 1), BorderFactory.createEmptyBorder(main ? 4 : 5, 8, main ? 4 : 5, 8)));
         button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         button.addMouseListener(new MouseAdapter()
         {
@@ -255,8 +259,8 @@ public final class Ui
         });
         button.addFocusListener(new FocusAdapter()
         {
-            @Override public void focusGained(FocusEvent e) { button.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(Color.WHITE), BorderFactory.createEmptyBorder(5, 8, 5, 8))); }
-            @Override public void focusLost(FocusEvent e) { button.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(main ? GOLD.darker() : ColorScheme.MEDIUM_GRAY_COLOR), BorderFactory.createEmptyBorder(5, 8, 5, 8))); }
+            @Override public void focusGained(FocusEvent e) { button.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(Color.WHITE, main ? 2 : 1), BorderFactory.createEmptyBorder(main ? 4 : 5, 8, main ? 4 : 5, 8))); }
+            @Override public void focusLost(FocusEvent e) { button.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(main ? GOLD : ColorScheme.MEDIUM_GRAY_COLOR, main ? 2 : 1), BorderFactory.createEmptyBorder(main ? 4 : 5, 8, main ? 4 : 5, 8))); }
         });
         button.addActionListener(event -> action.run()); return button;
     }

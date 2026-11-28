@@ -20,7 +20,13 @@ public final class BankSendCard extends JPanel
             add(Ui.row(name, "x" + entry.getValue().getAsLong(), false));
         });
         add(Ui.muted("Counted from your bank, inventory and equipment only.", Ui.CARD_WIDTH));
-        JCheckBox automatic = new JCheckBox("Send automatically"); automatic.setOpaque(false); automatic.setToolTipText("For the rest of this event only; forgotten on logout or restart."); add(automatic);
-        add(Ui.buttons(Ui.button("Send", () -> actions.bank(eventId, precheckId, automatic.isSelected())), Ui.button("Not now", () -> actions.dismissBank(eventId, precheckId))));
+        // A drawn switch, not a checkbox: RuneLite's checkbox was hard to see on this card (2026-11-27).
+        final boolean[] automatic = {false};
+        JLabel state = new JLabel("Send automatically: Off"); state.setFont(net.runelite.client.ui.FontManager.getRunescapeSmallFont()); state.setForeground(Ui.MUTED);
+        Ui.Switch toggle = new Ui.Switch(false, on -> { automatic[0] = on; state.setText("Send automatically: " + (on ? "On" : "Off")); state.setForeground(on ? Ui.GOOD : Ui.MUTED); });
+        toggle.setToolTipText("For the rest of this event only; forgotten on logout or restart.");
+        JPanel row = new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 6, 4)); row.setOpaque(false); row.add(toggle); row.add(state);
+        add(Ui.fit(row));
+        add(Ui.buttons(Ui.primary("Send", () -> actions.bank(eventId, precheckId, automatic[0])), Ui.button("Not now", () -> actions.dismissBank(eventId, precheckId))));
     }
 }
